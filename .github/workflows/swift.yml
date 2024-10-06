@@ -21,9 +21,9 @@ jobs:
 
     # Build the Swift package for iOS simulator
     - name: Build for iOS Simulator
-      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer-Package\-sdk iphonesimulator build
+      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer-Package \-sdk iphonesimulator build
 
     # Run tests on iOS simulator
     - name: Run tests on iOS Simulator
-      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer-Package\-sdk iphonesimulator test
+      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer-Package \-sdk iphonesimulator test
 
