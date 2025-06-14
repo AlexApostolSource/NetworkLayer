@@ -8,10 +8,10 @@ public protocol NetworkLayerProtocol {
 }
 
 public final class NetworkLayer: NetworkLayerProtocol {
-    let networkLayerCore: NetworkLayerCoreProtocol
+   private let networkLayerCore: NetworkLayerCoreProtocol
     
-    public init(networkLayerCore: NetworkLayerCoreProtocol) {
-        self.networkLayerCore = networkLayerCore
+    public init(urlSession: URLSession = .shared) {
+        self.networkLayerCore = NetworkLayerCore(session: urlSession)
     }
     
     public func execute<T: Decodable>(request: URLRequest)  async throws -> T {

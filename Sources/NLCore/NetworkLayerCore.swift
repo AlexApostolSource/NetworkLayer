@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NetworkLayerCoreProtocol {
+protocol NetworkLayerCoreProtocol {
     func execute(request: URLRequest) async throws -> (Data, URLResponse)
 }
 

@@ -26,7 +26,7 @@ final class NetworkLayerTests: XCTestCase {
     func test_EndpointMethod() throws {
         // Given
         let mockEndpoint = MockEndpoint()
-        mockEndpoint.mockRequestMethodValue = .post
+        mockEndpoint.mockRequestMethodValue = .POST
         let urlRequest = try XCTUnwrap(mockEndpoint.asURLRequest)
         
         // Then
@@ -47,7 +47,7 @@ final class NetworkLayerTests: XCTestCase {
 class MockEndpoint: NetworkLayerEndpoint {
     
     var mockURLQueryItems: [URLQueryItem] = []
-    var mockRequestMethodValue: URLRequestMethod = .get
+    var mockRequestMethodValue: URLRequestMethod = .GET
     
     var queryItems: [URLQueryItem] {
         mockURLQueryItems

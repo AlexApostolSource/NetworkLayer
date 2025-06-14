@@ -40,7 +40,7 @@ extension NetworkLayerEndpoint {
 }
 
 public enum URLRequestMethod: String {
-    case get = "GET"
-    case post = "POST"
-    case put = "PUT"
+    case GET
+    case POST
+    case PUT
 }
