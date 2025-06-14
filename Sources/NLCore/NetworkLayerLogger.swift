@@ -15,7 +15,7 @@ public enum LoggingLevel: String {
     case error
 }
 
-enum NetworkLayerLoggingSubsystem: String {
+enum NetworkLayerLoggingSubsystem {
     case decoding(Error)
     case urlRequestFailing(Error)
 }
