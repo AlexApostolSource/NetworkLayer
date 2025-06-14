@@ -1,6 +1,3 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 import Foundation
 
 public protocol NetworkLayerProtocol {
@@ -9,14 +6,26 @@ public protocol NetworkLayerProtocol {
 
 public final class NetworkLayer: NetworkLayerProtocol {
    private let networkLayerCore: NetworkLayerCoreProtocol
+   private let logger: NetworkLayerLogger?
     
-    public init(urlSession: URLSession = .shared) {
-        self.networkLayerCore = NetworkLayerCore(session: urlSession)
+    public init(urlSession: URLSession = .shared, logger: NetworkLayerLogger?) {
+        self.logger = logger
+        self.networkLayerCore = NetworkLayerCore(session: urlSession, logger: logger)
     }
     
-    public func execute<T: Decodable>(request: URLRequest)  async throws -> T {
+    public func execute<T: Decodable>(request: URLRequest) async throws -> T {
         let (data, _) = try await networkLayerCore.execute(request: request)
         let decoder = JSONDecoder()
-        return try decoder.decode(T.self, from: data)
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            logger?.log(
+                logMetadata: NetworkLayerLogMetadata(
+                    logLevel: .error,
+                    subsystem: .decoding(error)
+                )
+            )
+            throw error
+        }
     }
 }

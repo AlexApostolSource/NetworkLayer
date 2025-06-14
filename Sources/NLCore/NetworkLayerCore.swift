@@ -13,12 +13,24 @@ protocol NetworkLayerCoreProtocol {
 
 final class NetworkLayerCore: NetworkLayerCoreProtocol {
     private let session: URLSession
+    private let logger: NetworkLayerLogger?
     
-    init(session: URLSession) {
+    init(session: URLSession, logger: NetworkLayerLogger?) {
         self.session = session
+        self.logger = logger
     }
     
     public func execute(request: URLRequest) async throws -> (Data, URLResponse)  {
-         return try await session.data(for: request)
+        do {
+            return try await session.data(for: request)
+        } catch {
+            logger?.log(
+                logMetadata: NetworkLayerLogMetadata(
+                    logLevel: .error,
+                    subsystem: .urlRequestFailing(error)
+                )
+            )
+            throw error
+        }
     }
 }
