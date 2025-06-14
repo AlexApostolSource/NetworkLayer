@@ -45,6 +45,7 @@ final class NetworkLayerTests: XCTestCase {
 }
 
 class MockEndpoint: NetworkLayerEndpoint {
+    var timeout: TimeInterval?
     
     var mockURLQueryItems: [URLQueryItem] = []
     var mockRequestMethodValue: URLRequestMethod = .GET

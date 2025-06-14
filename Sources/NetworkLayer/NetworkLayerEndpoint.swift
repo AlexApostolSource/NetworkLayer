@@ -14,6 +14,9 @@ public protocol NetworkLayerEndpoint {
     var asURLRequest: URLRequest? { get }
     var host: String { get }
     var scheme: String { get }
+    var timeout: TimeInterval { get }
+    var headers: [String: String]? { get }
+    var requiredAuth: Bool { get }
 }
 
 extension NetworkLayerEndpoint {
@@ -21,9 +24,16 @@ extension NetworkLayerEndpoint {
         NetworkLayerConfig.host
     }
     
+    var timeout: TimeInterval {
+        60
+    }
+    
     var scheme: String {
         "https"
     }
+    
+    var requiredAuth: Bool { false }
+    var headers: [String: String]? { nil }
     
     var asURLRequest: URLRequest? {
         var urlComponent = URLComponents()
@@ -35,6 +45,12 @@ extension NetworkLayerEndpoint {
         guard let url = urlComponent.url else { return nil }
         var  request = URLRequest(url: url)
         request.httpMethod = method.rawValue
+        request.timeoutInterval = timeout
+        if let headers {
+            headers.forEach { key, value in
+                request.addValue(value, forHTTPHeaderField: key)
+            }
+        }
         return request
     }
 }
