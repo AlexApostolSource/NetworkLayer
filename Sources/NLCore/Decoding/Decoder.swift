@@ -7,11 +7,11 @@
 import Foundation
 
 public protocol NetworkLayerDecoder {
-    func attemptToDecode<T: Decodable>(type: T.Type, from: Data) throws -> T
+    func attemptDecode<T: Decodable>(type: T.Type, from: Data) throws -> T
 }
 
 extension JSONDecoder: NetworkLayerDecoder {
-    public func attemptToDecode<T: Decodable>(type: T.Type, from: Data) throws -> T {
+    public func attemptDecode<T: Decodable>(type: T.Type, from: Data) throws -> T {
         return try self.decode(type, from: from)
     }
 }

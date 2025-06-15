@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol NetworkLayerProtocol {
-    func execute<T: Decodable>(request: URLRequest)  async throws -> T
+    func execute(request: URLRequest)  async throws -> Result<(Data, URLResponse), Error>
 }
 
 public final class NetworkLayer: NetworkLayerProtocol {
@@ -19,18 +19,7 @@ public final class NetworkLayer: NetworkLayerProtocol {
         self.decoder = decoder
     }
     
-    public func execute<T: Decodable>(request: URLRequest) async throws -> T {
-        let (data, _) = try await networkLayerCore.execute(request: request)
-        do {
-            return try decoder.attemptToDecode(type: T.self, from: data)
-        } catch {
-            logger?.log(
-                logMetadata: NetworkLayerLogMetadata(
-                    logLevel: .error,
-                    subsystem: .decoding(error)
-                )
-            )
-            throw error
-        }
+    public func execute(request: URLRequest)  async throws -> Result<(Data, URLResponse), Error> {
+        return try await networkLayerCore.execute(request: request)
     }
 }

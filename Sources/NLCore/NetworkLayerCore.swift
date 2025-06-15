@@ -8,7 +8,7 @@
 import Foundation
 
 protocol NetworkLayerCoreProtocol {
-    func execute(request: URLRequest) async throws -> (Data, URLResponse)
+    func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error>
 }
 
 final class NetworkLayerCore: NetworkLayerCoreProtocol {
@@ -20,9 +20,10 @@ final class NetworkLayerCore: NetworkLayerCoreProtocol {
         self.logger = logger
     }
     
-    public func execute(request: URLRequest) async throws -> (Data, URLResponse)  {
+    public func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error> {
         do {
-            return try await session.data(for: request)
+            let result = try await session.data(for: request)
+            return .success(result)
         } catch {
             logger?.log(
                 logMetadata: NetworkLayerLogMetadata(
@@ -30,7 +31,7 @@ final class NetworkLayerCore: NetworkLayerCoreProtocol {
                     subsystem: .urlRequestFailing(error)
                 )
             )
-            throw error
+            return .failure(error)
         }
     }
 }

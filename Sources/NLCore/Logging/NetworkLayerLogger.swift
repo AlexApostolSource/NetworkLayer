@@ -15,12 +15,17 @@ public enum LoggingLevel: String {
     case error
 }
 
-enum NetworkLayerLoggingSubsystem {
+public enum NetworkLayerLoggingSubsystem {
     case decoding(Error)
     case urlRequestFailing(Error)
 }
 
 public struct NetworkLayerLogMetadata {
-    let logLevel: LoggingLevel
-    let subsystem: NetworkLayerLoggingSubsystem
+    public let logLevel: LoggingLevel
+    public let subsystem: NetworkLayerLoggingSubsystem
+
+    public init(logLevel: LoggingLevel, subsystem: NetworkLayerLoggingSubsystem) {
+        self.logLevel = logLevel
+        self.subsystem = subsystem
+    }
 }
