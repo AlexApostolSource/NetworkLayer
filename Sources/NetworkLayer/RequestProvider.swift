@@ -23,18 +23,18 @@ public final class RequestProvider: RequestProviderProtocol {
         requestInterceptorAdapter: RequestInterceptorAdapter,
         decoder: NetworkLayerDecoder = JSONDecoder(),
         logger: NetworkLayerLogger?
-    )  {
+    ) {
         self.networkLayer = networkLayer
         self.requestInterceptorAdapter = requestInterceptorAdapter
         self.decoder = decoder
         self.logger = logger
     }
-    
+
     public func execute<T: Decodable>(endpoint: NetworkLayerEndpoint) async throws -> T {
         let request = try await requestInterceptorAdapter.adapt(endpoint: endpoint)
         let result = try await networkLayer.execute(request: request)
         let process = try await requestInterceptorAdapter.process(result, for: endpoint)
-        
+
         switch process {
         case .success((let data, _)):
             do {

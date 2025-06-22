@@ -12,7 +12,7 @@ public protocol RequestInterceptor: Sendable {
         _ request: URLRequest,
         for endpoint: any NetworkLayerEndpoint
     ) async throws -> URLRequest
-    
+
     func process(
         _ result: Result<(Data, URLResponse), Error>,
         for endpoint: any NetworkLayerEndpoint
@@ -24,7 +24,7 @@ extension RequestInterceptor {
         _ request: URLRequest,
         for endpoint: any NetworkLayerEndpoint
     ) async throws -> URLRequest { request }
-    
+
     public func process(
         _ result: Result<(Data, URLResponse), Error>,
         for endpoint: any NetworkLayerEndpoint

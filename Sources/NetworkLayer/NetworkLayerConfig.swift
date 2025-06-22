@@ -12,7 +12,7 @@ public final class NetworkLayerConfig {
     public static var host: String {
         completion?() ?? defaultPath
     }
-    
+
     /// The completion closure holds the logic to provide the base path or configuration value.
     ///  It must be set only once during app initialization, before any API requests are made.
     ///  Once set, it should not change, preventing any risk of data races.

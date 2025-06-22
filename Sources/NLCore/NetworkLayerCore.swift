@@ -7,19 +7,19 @@
 
 import Foundation
 
-protocol NetworkLayerCoreProtocol {
+public protocol NetworkLayerCoreProtocol {
     func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error>
 }
 
-final class NetworkLayerCore: NetworkLayerCoreProtocol {
+internal final class NetworkLayerCore: NetworkLayerCoreProtocol {
     private let session: URLSession
     private let logger: NetworkLayerLogger?
-    
+
     init(session: URLSession, logger: NetworkLayerLogger?) {
         self.session = session
         self.logger = logger
     }
-    
+
     public func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error> {
         do {
             let result = try await session.data(for: request)

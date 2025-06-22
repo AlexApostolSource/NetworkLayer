@@ -23,25 +23,25 @@ extension NetworkLayerEndpoint {
     var host: String {
         NetworkLayerConfig.host
     }
-    
+
     var timeout: TimeInterval {
         60
     }
-    
+
     var scheme: String {
         "https"
     }
-    
+
     var requiredAuth: Bool { false }
     var headers: [String: String]? { nil }
-    
+
     var asURLRequest: URLRequest? {
         var urlComponent = URLComponents()
         urlComponent.host = host
         urlComponent.path = path
         urlComponent.queryItems = queryItems
         urlComponent.scheme = scheme
-       
+
         guard let url = urlComponent.url else { return nil }
         var  request = URLRequest(url: url)
         request.httpMethod = method.rawValue
