@@ -11,7 +11,6 @@ opt_in_rules:
   - explicit_init
   - explicit_top_level_acl
   - strict_fileprivate
-  - prefer_self_in_static_references
   - sorted_imports
   - closure_spacing
   - switch_case_alignment
