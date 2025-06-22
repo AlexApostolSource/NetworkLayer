@@ -1,38 +1,38 @@
-import XCTest
 @testable import NetworkLayer
+import XCTest
 
-final class NetworkLayerTests: XCTestCase {
-    
+internal final class NetworkLayerTests: XCTestCase {
+
     func test_endpoint() {
         let mockEndpoint = MockEndpoint()
         XCTAssertNotNil(mockEndpoint.asURLRequest)
     }
-    
+
     func testEndpointQueryParams() throws {
         // Given
         let mockEndpoint = MockEndpoint()
         let item = URLQueryItem(name: "test", value: "testValue")
         mockEndpoint.mockURLQueryItems = [item]
         let url = try XCTUnwrap(mockEndpoint.asURLRequest?.url)
-        
+
         // When
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems
-        
+
         // Then
         XCTAssertEqual(queryItems, mockEndpoint.mockURLQueryItems)
     }
-    
+
     func test_EndpointMethod() throws {
         // Given
         let mockEndpoint = MockEndpoint()
         mockEndpoint.mockRequestMethodValue = .POST
         let urlRequest = try XCTUnwrap(mockEndpoint.asURLRequest)
-        
+
         // Then
         XCTAssertEqual(urlRequest.httpMethod, mockEndpoint.method.rawValue)
     }
-    
+
     func test_config() throws {
         let host = "www.testBasePath.com"
         NetworkLayerConfig.config(host: host)
@@ -44,20 +44,20 @@ final class NetworkLayerTests: XCTestCase {
     }
 }
 
-class MockEndpoint: NetworkLayerEndpoint {
+internal class MockEndpoint: NetworkLayerEndpoint {
     var timeout: TimeInterval?
-    
+
     var mockURLQueryItems: [URLQueryItem] = []
     var mockRequestMethodValue: URLRequestMethod = .GET
-    
+
     var queryItems: [URLQueryItem] {
         mockURLQueryItems
     }
-    
+
     var path: String {
        "/food/barcode/find-by-id/"
     }
-    
+
     var method: URLRequestMethod {
         mockRequestMethodValue
     }
