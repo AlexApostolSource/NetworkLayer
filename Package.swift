@@ -30,14 +30,23 @@ let package = Package(
             dependencies: [.target(name: "SwiftLintBinary")],
             packageAccess: false
         ),
+       
         .binaryTarget(
             name: "SwiftLintBinary",
             url: "https://github.com/realm/SwiftLint/releases/download/0.59.1/SwiftLintBinary.artifactbundle.zip",
             checksum: "b9f915a58a818afcc66846740d272d5e73f37baf874e7809ff6f246ea98ad8a2"
         ),
-        .target(name: "NLCore"),
+        .target(name: "NLCore", plugins: [
+            .plugin(
+                name: "SwiftLintBuildToolPlugin"
+            )
+        ]),
         .target(
-            name: "NetworkLayer", dependencies: ["NLCore"]),
+            name: "NetworkLayer", dependencies: ["NLCore"], plugins: [
+                .plugin(
+                    name: "SwiftLintBuildToolPlugin"
+                )
+            ]),
         .testTarget(
             name: "NetworkLayerTests",
             dependencies: ["NetworkLayer"], plugins: [

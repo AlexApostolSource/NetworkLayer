@@ -13,7 +13,7 @@ internal struct Test {
     let endpoint = MockEndpoint()
     let mockKey = "mockKey"
     let mockValue = "mockValue"
-    let interceptor : MockInterceptor
+    let interceptor: MockInterceptor
     let sut: RequestInterceptorAdapter
 
     init() {
