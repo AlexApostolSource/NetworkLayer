@@ -10,7 +10,6 @@ import Foundation
 import Testing
 
 internal struct Test {
-    
     let endpoint = MockEndpoint()
     let mockKey = "mockKey"
     let mockValue = "mockValue"
