@@ -59,8 +59,7 @@ private struct MockInterceptor: @unchecked Sendable, RequestInterceptor {
     var manipulateData: ((Data) -> Data)?
     var manipulateError: ((Error) -> Error)?
     func adapt(_ request: URLRequest, for endpoint: any NetworkLayerEndpoint)
-        async throws -> URLRequest
-    {
+        async throws -> URLRequest {
         guard let key = key, let value = value else { return request }
         var mutableRequest = request
         mutableRequest.addValue(value, forHTTPHeaderField: key)
