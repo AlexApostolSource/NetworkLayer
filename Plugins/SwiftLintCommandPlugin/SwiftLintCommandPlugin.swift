@@ -64,10 +64,11 @@ extension SwiftLintCommandPlugin {
     private func lintFiles(in paths: [String] = ["."],
                            for targetName: String? = nil,
                            with context: some CommandContext,
-                           arguments: [String]) throws {
+                           arguments: [String]) throws
+    {
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: context.workingDirectory)
-        process.executableURL = URL(fileURLWithPath: try context.tool)
+        process.executableURL = try URL(fileURLWithPath: context.tool)
         process.arguments = arguments
         if commandsWithoutCachPathOption.isDisjoint(with: arguments) {
             process.arguments! += ["--cache-path", context.cacheDirectory]

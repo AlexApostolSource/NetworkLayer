@@ -15,7 +15,7 @@ enum SwiftLintBuildToolPluginError: Error, CustomStringConvertible {
         case let .swiftFilesNotInWorkingDirectory(directory):
             "Swift files are not in working directory '\(directory)'."
         case .swiftlintNotFound:
-              """
+            """
             SwiftLint no encontrado. Instálalo con `brew install swiftlint`
             o ajusta las rutas en findSwiftLint().
             """

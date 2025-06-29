@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol NetworkLayerEndpoint {
-    var queryItems: [URLQueryItem] { get}
+    var queryItems: [URLQueryItem] { get }
     var path: String { get }
     var method: URLRequestMethod { get }
     var asURLRequest: URLRequest? { get }
@@ -43,11 +43,11 @@ extension NetworkLayerEndpoint {
         urlComponent.scheme = scheme
 
         guard let url = urlComponent.url else { return nil }
-        var  request = URLRequest(url: url)
+        var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.timeoutInterval = timeout
         if let headers {
-            headers.forEach { key, value in
+            for (key, value) in headers {
                 request.addValue(value, forHTTPHeaderField: key)
             }
         }

@@ -8,29 +8,30 @@ let package = Package(
     products: [
         .library(
             name: "NetworkLayer",
-            targets: ["NetworkLayer"]),
+            targets: ["NetworkLayer"]
+        )
     ],
     targets: [
-           // ---------- PLUG-INS ----------
-           .plugin(
-               name: "SwiftLintBuildToolPlugin",
-               capability: .buildTool()
-           ),
-           .plugin(
-               name: "SwiftLintCommandPlugin",
-               capability: .command(
-                   intent: .custom(
-                       verb: "swiftlint",
-                       description: "SwiftLint Command Plugin"
-                   ),
-                   permissions: [
-                       .writeToPackageDirectory(
-                           reason: "When this command is run with `--fix` it may modify source files."
-                       )
-                   ]
-               )
-           ),
-           .target(name: "NLCore", plugins: [
+        // ---------- PLUG-INS ----------
+        .plugin(
+            name: "SwiftLintBuildToolPlugin",
+            capability: .buildTool()
+        ),
+        .plugin(
+            name: "SwiftLintCommandPlugin",
+            capability: .command(
+                intent: .custom(
+                    verb: "swiftlint",
+                    description: "SwiftLint Command Plugin"
+                ),
+                permissions: [
+                    .writeToPackageDirectory(
+                        reason: "When this command is run with `--fix` it may modify source files."
+                    )
+                ]
+            )
+        ),
+        .target(name: "NLCore", plugins: [
             .plugin(
                 name: "SwiftLintBuildToolPlugin"
             )
@@ -40,7 +41,8 @@ let package = Package(
                 .plugin(
                     name: "SwiftLintBuildToolPlugin"
                 )
-            ]),
+            ]
+        ),
         .testTarget(
             name: "NetworkLayerTests",
             dependencies: ["NetworkLayer"], plugins: [
@@ -48,6 +50,6 @@ let package = Package(
                     name: "SwiftLintBuildToolPlugin"
                 )
             ]
-        ),
+        )
     ]
 )

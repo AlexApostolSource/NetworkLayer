@@ -11,7 +11,7 @@ public protocol NetworkLayerCoreProtocol {
     func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error>
 }
 
-internal final class NetworkLayerCore: NetworkLayerCoreProtocol {
+final class NetworkLayerCore: NetworkLayerCoreProtocol {
     private let session: URLSession
     private let logger: NetworkLayerLogger?
 

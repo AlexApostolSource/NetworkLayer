@@ -9,7 +9,7 @@ import Foundation
 import NLCore
 
 public protocol RequestProviderProtocol {
-    func execute<T: Decodable>(endpoint: NetworkLayerEndpoint)  async throws -> T
+    func execute<T: Decodable>(endpoint: NetworkLayerEndpoint) async throws -> T
 }
 
 public final class RequestProvider: RequestProviderProtocol {

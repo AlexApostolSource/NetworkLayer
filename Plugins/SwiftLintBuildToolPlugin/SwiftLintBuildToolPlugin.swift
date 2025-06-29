@@ -1,19 +1,17 @@
-import PackagePlugin
 import Foundation
+import PackagePlugin
 
 @main
 struct SwiftLintBuildToolPlugin: BuildToolPlugin {
-
     func createBuildCommands(
         context: PluginContext,
         target: Target
     ) throws -> [Command] {
-
         let swiftlint = try Self.findSwiftLint()
 
         guard let module = target as? SourceModuleTarget else { return [] }
         let sources = module.sourceFiles(withSuffix: "swift")
-                           .map(\.path.string)
+            .map(\.path.string)
         return [
             .prebuildCommand(
                 displayName: "SwiftLint (\(target.name))",
@@ -21,7 +19,7 @@ struct SwiftLintBuildToolPlugin: BuildToolPlugin {
                 arguments: ["lint",
                             "--quiet",
                             "--cache-path", context.pluginWorkDirectory.string]
-                            + sources,
+                    + sources,
                 environment: [:],
                 outputFilesDirectory: context.pluginWorkDirectory
             )
@@ -29,15 +27,17 @@ struct SwiftLintBuildToolPlugin: BuildToolPlugin {
     }
 
     // --------------------------------------------------------------------
+
     // MARK: - Helpers
+
     // --------------------------------------------------------------------
 
     /// Busca SwiftLint en las rutas más habituales.
-     static func findSwiftLint() throws -> Path {
+    static func findSwiftLint() throws -> Path {
         let candidates = [
-            "/opt/homebrew/bin/swiftlint",   // Brew (Apple Silicon)
-            "/usr/local/bin/swiftlint",      // Brew (Intel)
-            "/usr/bin/swiftlint"             // Xcode 15+ Toolchain
+            "/opt/homebrew/bin/swiftlint", // Brew (Apple Silicon)
+            "/usr/local/bin/swiftlint", // Brew (Intel)
+            "/usr/bin/swiftlint" // Xcode 15+ Toolchain
         ]
         for c in candidates where FileManager.default.isExecutableFile(atPath: c) {
             return Path(c)
@@ -45,4 +45,3 @@ struct SwiftLintBuildToolPlugin: BuildToolPlugin {
         throw SwiftLintBuildToolPluginError.swiftlintNotFound
     }
 }
-

@@ -1,8 +1,7 @@
 @testable import NetworkLayer
 import XCTest
 
-internal final class NetworkLayerTests: XCTestCase {
-
+final class NetworkLayerTests: XCTestCase {
     func test_endpoint() {
         let mockEndpoint = MockEndpoint()
         XCTAssertNotNil(mockEndpoint.asURLRequest)
@@ -44,7 +43,7 @@ internal final class NetworkLayerTests: XCTestCase {
     }
 }
 
-internal class MockEndpoint: NetworkLayerEndpoint {
+class MockEndpoint: NetworkLayerEndpoint {
     var timeout: TimeInterval?
 
     var mockURLQueryItems: [URLQueryItem] = []
@@ -55,7 +54,7 @@ internal class MockEndpoint: NetworkLayerEndpoint {
     }
 
     var path: String {
-       "/food/barcode/find-by-id/"
+        "/food/barcode/find-by-id/"
     }
 
     var method: URLRequestMethod {
