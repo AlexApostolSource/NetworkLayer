@@ -6,8 +6,9 @@
 //
 
 import Foundation
-@testable import NetworkLayer
 import Testing
+
+@testable import NetworkLayer
 
 struct RequestInterceptorTests {
     let endpoint = MockEndpoint()
@@ -57,7 +58,9 @@ private struct MockInterceptor: @unchecked Sendable, RequestInterceptor {
     let value: String?
     var manipulateData: ((Data) -> Data)?
     var manipulateError: ((Error) -> Error)?
-    func adapt(_ request: URLRequest, for endpoint: any NetworkLayerEndpoint) async throws -> URLRequest {
+    func adapt(_ request: URLRequest, for endpoint: any NetworkLayerEndpoint)
+        async throws -> URLRequest
+    {
         guard let key = key, let value = value else { return request }
         var mutableRequest = request
         mutableRequest.addValue(value, forHTTPHeaderField: key)
@@ -69,19 +72,16 @@ private struct MockInterceptor: @unchecked Sendable, RequestInterceptor {
         for endpoint: any NetworkLayerEndpoint
     ) async throws -> Result<(Data, URLResponse), Error> {
         switch result {
-            case .success(let success):
-                if let manipulateData = manipulateData {
-                    return .success((manipulateData(success.0), success.1))
-                } else {
-                    return .success(success)
-                }
-
-            case .failure(let failure):
-                if let manipulateError = manipulateError {
-                    return .failure(manipulateError(failure))
-                } else {
-                    return .failure(failure)
-                }
+        case .success(let (data, response)):
+            if let manipulateData = manipulateData {
+                return .success((manipulateData(data), response))
+            }
+            return .success((data, response))
+        case .failure(let error):
+            if let manipulateError = manipulateError {
+                return .failure(manipulateError(error))
+            }
+            return .failure(error)
         }
     }
 }

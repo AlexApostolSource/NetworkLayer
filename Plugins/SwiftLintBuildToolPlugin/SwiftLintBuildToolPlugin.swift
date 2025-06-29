@@ -39,8 +39,9 @@ struct SwiftLintBuildToolPlugin: BuildToolPlugin {
             "/usr/local/bin/swiftlint", // Brew (Intel)
             "/usr/bin/swiftlint" // Xcode 15+ Toolchain
         ]
-        for c in candidates where FileManager.default.isExecutableFile(atPath: c) {
-            return Path(c)
+        let fileManager = FileManager.default
+        for cand in candidates where fileManager.isExecutableFile(atPath: cand) {
+            return Path(cand)
         }
         throw SwiftLintBuildToolPluginError.swiftlintNotFound
     }

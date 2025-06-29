@@ -9,11 +9,9 @@ disabled_rules: # rule identifiers to exclude from running
 # 2. Reglas “opt-in” (requieren activación explícita)
 opt_in_rules:
   - explicit_init
-  - explicit_top_level_acl
   - strict_fileprivate
   - sorted_imports
   - closure_spacing
-  - switch_case_alignment
   - unowned_variable_capture
   - force_unwrapping
   - identifier_name

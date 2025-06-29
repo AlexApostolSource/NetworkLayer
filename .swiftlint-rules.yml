@@ -64,7 +64,6 @@ only_rules:
   - explicit_acl
   - explicit_enum_raw_value
   - explicit_init
-  - explicit_top_level_acl
   - explicit_type_interface
   # - extension_access_modifier
   - fallthrough
@@ -200,7 +199,6 @@ only_rules:
   - strong_iboutlet
   - superfluous_disable_command
   - superfluous_else
-  - switch_case_alignment
   - switch_case_on_newline
   - syntactic_sugar
   - test_case_accessibility
