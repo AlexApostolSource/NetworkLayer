@@ -7,11 +7,11 @@ private let commandsNotExpectingPaths: Set<String> = [
     "baseline",
     "reporters",
     "rules",
-    "version",
+    "version"
 ]
 
 private let commandsWithoutCachPathOption: Set<String> = commandsNotExpectingPaths.union([
-    "analyze",
+    "analyze"
 ])
 
 @main
@@ -64,8 +64,7 @@ extension SwiftLintCommandPlugin {
     private func lintFiles(in paths: [String] = ["."],
                            for targetName: String? = nil,
                            with context: some CommandContext,
-                           arguments: [String]) throws
-    {
+                           arguments: [String]) throws {
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: context.workingDirectory)
         process.executableURL = try URL(fileURLWithPath: context.tool)
