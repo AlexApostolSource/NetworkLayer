@@ -29,28 +29,47 @@ struct RequestInterceptorTests {
         #expect(headers?[mockKey] as? String == mockValue)
     }
 
-    //    @Test func testAdapterProcessRequest() async throws {
-    //        let url = try #require(endpoint.asURLRequest?.url)
-    //        let result = (
-    //            Data(),
-    //            URLResponse(
-    //                url: url,
-    //                mimeType: nil,
-    //                expectedContentLength: 100,
-    //                textEncodingName: nil
-    //            )
-    //        )
-    //
-    //        let intercetor = MockInterceptor(key: mockKey, value: mockValue)
-    //        let sut = RequestInterceptorAdapter(interceptors: [interceptor])
-    //        interceptor.manipulateData = { data in
-    //            return Data("Modified Data".utf8)
-    //        }
-    //        let updatedResult = try await interceptor.process(.success(result), for: endpoint)
-    //
-    //
-    //
-    //    }
+    @Test("") func testAdapterProcessRequest() async throws {
+        // Given
+        let url = try #require(endpoint.asURLRequest?.url)
+        let initialMockValue = "Initial Value"
+        let modifiedValue = "Modified Value"
+        let data = try JSONEncoder().encode(MockData(value: initialMockValue))
+
+        let result = (
+            data,
+            URLResponse(
+                url: url,
+                mimeType: nil,
+                expectedContentLength: 100,
+                textEncodingName: nil
+            )
+        )
+
+        var interceptor = MockInterceptor(key: mockKey, value: mockValue)
+
+        interceptor.manipulateData = { data in
+            let mockData = try? JSONDecoder().decode(MockData.self, from: data)
+            #expect(mockData?.value == initialMockValue)
+
+            let mockDataModified = try? JSONEncoder().encode(
+                MockData(value: modifiedValue)
+            )
+            return  mockDataModified ?? Data()
+        }
+
+        let sut = RequestInterceptorAdapter(interceptors: [interceptor])
+
+        // When
+        let updatedResult = try await sut.process(.success(result), for: endpoint)
+
+        let dataResult = try #require(updatedResult.get().0)
+        let decodedData = try JSONDecoder().decode(MockData.self, from: dataResult)
+
+        // Then
+        #expect(decodedData.value == modifiedValue)
+
+    }
 }
 
 private struct MockInterceptor: @unchecked Sendable, RequestInterceptor {
@@ -83,4 +102,8 @@ private struct MockInterceptor: @unchecked Sendable, RequestInterceptor {
             return .failure(error)
         }
     }
+}
+
+private struct MockData: Codable {
+    let value: String
 }
