@@ -19,7 +19,7 @@ public protocol NetworkLayerEndpoint {
     var requiredAuth: Bool { get }
 }
 
-extension NetworkLayerEndpoint {
+public extension NetworkLayerEndpoint {
     var host: String {
         NetworkLayerConfig.host
     }

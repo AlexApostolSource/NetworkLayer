@@ -12,7 +12,6 @@ let package = Package(
         )
     ],
     targets: [
-        // ---------- PLUG-INS ----------
         .plugin(
             name: "SwiftLintBuildToolPlugin",
             capability: .buildTool()

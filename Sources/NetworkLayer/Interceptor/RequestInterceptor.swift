@@ -32,3 +32,7 @@ public extension RequestInterceptor {
         for endpoint: any NetworkLayerEndpoint
     ) async throws -> Result<(Data, URLResponse), Error> { result }
 }
+
+public protocol RetryInterceptorProtocol: Sendable {
+    func retry(request: URLRequest, attempts: Int) async throws -> (Data, URLResponse)
+}

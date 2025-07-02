@@ -1,0 +1,28 @@
+//
+//  RetryConfiguration.swift
+//  NetworkLayer
+//
+//  Created by Alex.personal on 1/7/25.
+//
+import Foundation
+
+public struct RetryConfiguration: Sendable, Equatable {
+    public var maxAttempts: Int                // Nº máximo de intentos
+    public var baseDelay: Duration             // Retraso inicial
+    public var exponentialFactor: Double       // Factor de back-off
+    public var jitter: Duration                // Jitter aleatorio ±
+    public var retryableStatusCodes: Set<Int>  // HTTP 429, 500…599 por defecto
+    public var retryableURLErrors: Set<URLError.Code>
+
+    public static let `default` = RetryConfiguration(
+        maxAttempts: 3,
+        baseDelay: .milliseconds(500),
+        exponentialFactor: 2.0,
+        jitter: .milliseconds(100),
+        retryableStatusCodes: Set(500...599).union([408, 429]),
+        retryableURLErrors: [
+            .timedOut, .cannotFindHost, .networkConnectionLost,
+            .cannotConnectToHost, .dnsLookupFailed
+        ]
+    )
+}
