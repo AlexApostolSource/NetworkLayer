@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol NetworkLayerProtocol {
-    func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error>
+    func execute(request: URLRequest) async throws -> NetworkResponse
 }
 
 public final class NetworkLayer: NetworkLayerProtocol {
@@ -18,7 +18,7 @@ public final class NetworkLayer: NetworkLayerProtocol {
         self.decoder = decoder
     }
 
-    public func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error> {
+    public func execute(request: URLRequest) async throws -> NetworkResponse {
         return try await networkLayerCore.execute(request: request)
     }
 }

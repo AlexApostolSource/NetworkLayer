@@ -35,10 +35,11 @@ public final class RequestProvider: RequestProviderProtocol {
         let result = try await networkLayer.execute(request: request)
         let process = try await requestInterceptorAdapter.process(result, for: endpoint)
 
-        switch process {
-        case .success((let data, _)):
+        switch process.result {
+        case .success(let data):
             do {
-                return try decoder.attemptDecode(type: T.self, from: data)
+                return try decoder
+                    .attemptDecode(type: T.self, from: process.data)
             } catch {
                 logger?.log(
                     logMetadata: NetworkLayerLogMetadata(

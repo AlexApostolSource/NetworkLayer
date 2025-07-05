@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NLCore
 
 public protocol RequestInterceptor: Sendable {
     func adapt(
@@ -13,12 +14,10 @@ public protocol RequestInterceptor: Sendable {
         for endpoint: any NetworkLayerEndpoint
     ) async throws -> URLRequest
 
-    func process
-
-    (
-        _ result: Result<(Data, URLResponse), Error>,
-        for endpoint: any NetworkLayerEndpoint
-    ) async throws -> Result<(Data, URLResponse), Error>
+    func process(
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse
 }
 
 public extension RequestInterceptor {
@@ -28,11 +27,9 @@ public extension RequestInterceptor {
     ) async throws -> URLRequest { request }
 
     func process(
-        _ result: Result<(Data, URLResponse), Error>,
-        for endpoint: any NetworkLayerEndpoint
-    ) async throws -> Result<(Data, URLResponse), Error> { result }
-}
-
-public protocol RetryInterceptorProtocol: Sendable {
-    func retry(request: URLRequest, attempts: Int) async throws -> (Data, URLResponse)
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse {
+        result
+    }
 }

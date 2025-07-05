@@ -1,37 +1,115 @@
 //
-//  File.swift
+//  NetworkLayerCore.swift
 //  NetworkLayer
 //
-//  Created by Alex.personal on 2/10/24.
+//  Created by Alex.personal on 2 Oct 2024.
+//
+// MARK: Overview
+//  -------------
+//  `NetworkLayerCore` is the low-level component that actually performs the
+//  `URLSession` request.  It **always** returns a `NetworkResponse` container
+//  so that callers have access to the raw `Data` and `URLResponse` regardless
+//  of whether the HTTP status code is deemed “successful”.
+//
+//  Why convert non-2xx codes into `.failure`?
+//  -----------------------------------------
+//  • According to RFC 9110, every status in **200-299** is “Successful”; anything
+//    outside that range still arrives via valid TCP/HTTP but usually indicates
+//    a business-level error (301, 401, 500…).
+//  • `URLSession` throws only on *transport* failures (`URLError`).  Without our
+//    own filter a 404 or 500 would reach the upper layers as `.success`, forcing
+//    each caller to duplicate status-code validation.
+//  • The block below wraps any non-2xx response in
+//      `NetworkError.http(data:response:)`,
+//    preserving the body and headers so that interceptors, retry policies, or
+//    presentation layers can react intelligently.
 //
 
 import Foundation
 
-public protocol NetworkLayerCoreProtocol {
-    func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error>
+// MARK: - Response & Error Types
+
+/// A single, uniform return type for every request.
+///
+/// Upper layers can rely on `data` and `response` **always** being present,
+/// similar to Alamofire’s `DataResponse`.
+public struct NetworkResponse {
+    public let data: Data
+    public let response: URLResponse
+    public let result: Result<Void, NetworkError>
+    public let statusCode: Int?
 }
 
-final class NetworkLayerCore: NetworkLayerCoreProtocol {
+/// Domain-specific error enumeration that keeps transport and HTTP semantics
+/// separate while never discarding the server payload.
+public enum NetworkError: Error {
+    /// Failure at the transport layer (DNS, TLS handshake, timeout…).
+    case transport(URLError)
+
+    /// HTTP status code outside `200…299`.  Includes the raw body so the caller
+    /// can parse server-side error objects (e.g. `{ "error": "token_expired" }`).
+    case http(data: Data, response: HTTPURLResponse)
+}
+
+// MARK: - Protocol
+
+public protocol NetworkLayerCoreProtocol {
+    /// Executes the request and classifies the outcome.
+    ///
+    /// - Returns: A `NetworkResponse` whose `result` is `.success` for HTTP
+    ///            2xx and `.failure` for every other status.
+    /// - Throws:  `NetworkError.transport` if the underlying `URLSession`
+    ///            raises an `URLError` (no `URLResponse` available).
+    func execute(request: URLRequest) async throws -> NetworkResponse
+}
+
+// MARK: - Concrete Implementation
+
+final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
     private let session: URLSession
     private let logger: NetworkLayerLogger?
 
-    init(session: URLSession, logger: NetworkLayerLogger?) {
+    init(session: URLSession = .shared, logger: NetworkLayerLogger? = nil) {
         self.session = session
-        self.logger = logger
+        self.logger  = logger
     }
 
-    public func execute(request: URLRequest) async throws -> Result<(Data, URLResponse), Error> {
+    /// Performs the `URLSession` call, maps non-2xx statuses to `.failure`,
+    /// and preserves the response for later inspection.
+    func execute(request: URLRequest) async throws -> NetworkResponse {
         do {
-            let result = try await session.data(for: request)
-            return .success(result)
-        } catch {
-            logger?.log(
-                logMetadata: NetworkLayerLogMetadata(
-                    logLevel: .error,
-                    subsystem: .urlRequestFailing(error)
+            let (data, response) = try await session.data(for: request)
+
+            // --- HTTP status-code validation --------------------------
+            if let http = response as? HTTPURLResponse,
+               !(200...299).contains(http.statusCode) {
+
+                logger?.log(
+                    logMetadata: NetworkLayerLogMetadata(
+                        logLevel: .error,
+                        subsystem: .serverStatusCode(http.statusCode)
+                    )
                 )
+
+                return NetworkResponse(
+                    data: data,
+                    response: http,
+                    result: .failure(.http(data: data, response: http)),
+                    statusCode: http.statusCode
+                )
+            }
+
+            // Successful transport *and* 2xx status.
+            return NetworkResponse(
+                data: data,
+                response: response,
+                result: .success(()),
+                statusCode: (response as? HTTPURLResponse)?.statusCode
             )
-            return .failure(error)
+
+        } catch let urlError as URLError {
+            // Pure transport failure: propagate as `NetworkError.transport`.
+            throw NetworkError.transport(urlError)
         }
     }
 }

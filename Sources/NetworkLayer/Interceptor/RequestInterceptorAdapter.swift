@@ -5,6 +5,7 @@
 //  Created by Alex.personal on 15/6/25.
 //
 import Foundation
+import NLCore
 
 public struct RequestInterceptorAdapter: Sendable {
     private let interceptors: [RequestInterceptor]
@@ -13,7 +14,7 @@ public struct RequestInterceptorAdapter: Sendable {
         self.interceptors = interceptors
     }
 
-    public func adapt<E: NetworkLayerEndpoint>(endpoint: E) async throws -> URLRequest {
+    public func adapt(endpoint: NetworkLayerEndpoint) async throws -> URLRequest {
         guard var request = endpoint.asURLRequest else { throw NetworkLayerError.malformedRequest }
         for interceptor in interceptors {
             try Task.checkCancellation()
@@ -22,10 +23,10 @@ public struct RequestInterceptorAdapter: Sendable {
         return request
     }
 
-    public func process(
-        _ result: Result<(Data, URLResponse), Error>,
-        for endpoint: any NetworkLayerEndpoint
-    ) async throws -> Result<(Data, URLResponse), Error> {
+    func process(
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse {
         var current = result
 
         for interceptor in interceptors.reversed() {

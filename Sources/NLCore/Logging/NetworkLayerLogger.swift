@@ -5,7 +5,7 @@
 //  Created by Alex.personal on 14/6/25.
 //
 
-public protocol NetworkLayerLogger {
+public protocol NetworkLayerLogger: Sendable {
     func log(logMetadata: NetworkLayerLogMetadata)
 }
 
@@ -18,6 +18,7 @@ public enum LoggingLevel: String {
 public enum NetworkLayerLoggingSubsystem {
     case decoding(Error)
     case urlRequestFailing(Error)
+    case serverStatusCode(Int)
 }
 
 public struct NetworkLayerLogMetadata {
