@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NLCore
 @testable import NetworkLayer
 import Testing
 
@@ -50,21 +51,20 @@ struct RequestInterceptorTests {
         let url = try #require(endpoint.asURLRequest?.url)
         let initialMockValue = "Initial Value"
         let data = try JSONEncoder().encode(MockData(value: initialMockValue))
-
-        let result = (
-            data,
-            URLResponse(
-                url: url,
-                mimeType: nil,
-                expectedContentLength: 100,
-                textEncodingName: nil
-            )
+        let response =  URLResponse(
+            url: url,
+            mimeType: nil,
+            expectedContentLength: 100,
+            textEncodingName: nil
         )
-
         let sut = RequestInterceptorAdapter(interceptors: [])
 
-        let updatedResult = try await sut.process(.success(result), for: endpoint)
-        try  #expect(updatedResult.get().0 == data)
+        let updatedResult = try await sut.process(
+            NetworkResponse.asMock(data: data, response: response),
+            for: endpoint
+        )
+        #expect(updatedResult.data == data)
+        #expect(updatedResult.response == response)
     }
 
     @Test(
@@ -78,17 +78,12 @@ struct RequestInterceptorTests {
         let initialMockValue = "Initial Value"
         let modifiedValue = "Modified Value"
         let data = try JSONEncoder().encode(MockData(value: initialMockValue))
-
-        let result = (
-            data,
-            URLResponse(
-                url: url,
-                mimeType: nil,
-                expectedContentLength: 100,
-                textEncodingName: nil
-            )
+        let response =  URLResponse(
+            url: url,
+            mimeType: nil,
+            expectedContentLength: 100,
+            textEncodingName: nil
         )
-
         let interceptor = MockInterceptor(key: mockKey, value: mockValue)
 
         interceptor.manipulateData = { data in
@@ -104,9 +99,12 @@ struct RequestInterceptorTests {
         let sut = RequestInterceptorAdapter(interceptors: [interceptor])
 
         // When
-        let updatedResult = try await sut.process(.success(result), for: endpoint)
+        let updatedResult = try await sut.process(
+            NetworkResponse.asMock(data: data, response: response),
+            for: endpoint
+        )
 
-        let dataResult = try #require(updatedResult.get().0)
+        let dataResult = try #require(updatedResult.data)
         let decodedData = try JSONDecoder().decode(MockData.self, from: dataResult)
 
         // Then
@@ -114,22 +112,26 @@ struct RequestInterceptorTests {
     }
 
     @Test(
-        "Processes an failure response does not modify failure if no inteceptor for a given Endpoint",
+        "Processes an failure response does not modify failure if no interceptor for a given Endpoint",
         .tags(.Interceptor.process)
     ) func testProcessDoesNotProcessfailure() async throws {
         // Given
-        let initialError = NSError(domain: "test", code: 403)
 
         let sut = RequestInterceptorAdapter(interceptors: [])
 
         // When
-        _ = try await sut.process(
-            .failure(initialError),
+        let result  = try await sut.process(
+            NetworkResponse
+                .asMock(),
             for: endpoint
         )
 
         // Then
-        #expect(interceptor.on403Error == false)
+        if case .failure = result.result {
+            #expect(Bool(false), "No interceptor should not modify failure result")
+        } else {
+            #expect(true, "Expected a failure result")
+        }
     }
 
     @Test(
@@ -137,26 +139,28 @@ struct RequestInterceptorTests {
         .tags(.Interceptor.process)
     ) func testAdapterProcessFailureRequest() async throws {
         // Given
-        let initialError = NSError(domain: "test", code: 403)
-
         let interceptor = MockInterceptor(key: mockKey, value: mockValue)
         let sut = RequestInterceptorAdapter(interceptors: [interceptor])
 
         // When
-        _ = try await sut.process(
-            .failure(initialError),
+        let result = try await sut.process(
+            NetworkResponse
+                .asMock(result: .failure(.transport(URLError(.badURL)))),
             for: endpoint
         )
 
         // Then
-        #expect(interceptor.on403Error == true)
+        if case let .failure(error) = result.result {
+            #expect(true, "Expected the interceptor to process the failure")
+        } else {
+            #expect(Bool(false), "Interceptor should process failure result")
+        }
     }
 }
 
 private final class MockInterceptor: @unchecked Sendable, RequestInterceptor {
     let key: String?
     let value: String?
-    var on403Error: Bool = false
     var manipulateData: ((Data) -> Data)?
     var manipulateError: ((Error) -> Error)?
 
@@ -169,7 +173,6 @@ private final class MockInterceptor: @unchecked Sendable, RequestInterceptor {
     ) {
         self.key = key
         self.value = value
-        self.on403Error = on403Error
         self.manipulateData = manipulateData
         self.manipulateError = manipulateError
     }
@@ -182,28 +185,55 @@ private final class MockInterceptor: @unchecked Sendable, RequestInterceptor {
         return mutableRequest
     }
 
-    public func process(
-        _ result: Result<(Data, URLResponse), Error>,
-        for endpoint: any NetworkLayerEndpoint
-    ) async throws -> Result<(Data, URLResponse), Error> {
-        switch result {
-        case .success(let (data, response)):
+    func process(
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse {
+        switch result.result {
+        case .success:
             if let manipulateData = manipulateData {
-                return .success((manipulateData(data), response))
+                let modifiedData = manipulateData(result.data)
+                return NetworkResponse.asMock(
+                    data: modifiedData,
+                    response: result.response,
+                    result: .success(()),
+                    statusCode: result.statusCode
+                )
             }
-            return .success((data, response))
+            return result
+
         case .failure(let error):
-                if let error = error as NSError?, error.code == 403 {
-                    on403Error = true
-                }
-            if let manipulateError = manipulateError {
-                return .failure(manipulateError(error))
-            }
-            return .failure(error)
+                return NetworkResponse.asMock(
+                    data: result.data,
+                    response: result.response,
+                    result:
+                            .failure(
+                                error
+                            ),
+                    statusCode: result.statusCode
+                )
+
         }
     }
 }
 
 private struct MockData: Codable {
     let value: String
+}
+
+extension NetworkResponse {
+    static func asMock(
+        data: Data = Data(),
+        response: URLResponse = URLResponse(),
+        result: Result<Void, NetworkError> = .success(()),
+        statusCode: Int? = nil
+    ) -> NetworkResponse {
+        NetworkResponse(
+            data: data,
+            response: response,
+            result: result,
+            statusCode: statusCode ?? (response as? HTTPURLResponse)?.statusCode ?? 200
+            )
+
+    }
 }

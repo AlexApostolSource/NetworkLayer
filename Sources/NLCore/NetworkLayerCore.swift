@@ -38,6 +38,13 @@ public struct NetworkResponse {
     public let response: URLResponse
     public let result: Result<Void, NetworkError>
     public let statusCode: Int?
+
+    public init(data: Data, response: URLResponse, result: Result<Void, NetworkError>, statusCode: Int? = nil) {
+        self.data = data
+        self.response = response
+        self.result = result
+        self.statusCode = statusCode
+    }
 }
 
 /// Domain-specific error enumeration that keeps transport and HTTP semantics
