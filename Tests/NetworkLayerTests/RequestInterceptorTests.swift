@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import NLCore
 @testable import NetworkLayer
+import NLCore
 import Testing
 
 @Suite
@@ -150,7 +150,7 @@ struct RequestInterceptorTests {
         )
 
         // Then
-        if case let .failure(error) = result.result {
+        if case .failure = result.result {
             #expect(true, "Expected the interceptor to process the failure")
         } else {
             #expect(Bool(false), "Interceptor should process failure result")
@@ -219,21 +219,4 @@ private final class MockInterceptor: @unchecked Sendable, RequestInterceptor {
 
 private struct MockData: Codable {
     let value: String
-}
-
-extension NetworkResponse {
-    static func asMock(
-        data: Data = Data(),
-        response: URLResponse = URLResponse(),
-        result: Result<Void, NetworkError> = .success(()),
-        statusCode: Int? = nil
-    ) -> NetworkResponse {
-        NetworkResponse(
-            data: data,
-            response: response,
-            result: result,
-            statusCode: statusCode ?? (response as? HTTPURLResponse)?.statusCode ?? 200
-            )
-
-    }
 }

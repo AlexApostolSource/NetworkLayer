@@ -13,7 +13,7 @@ public struct RetryConfiguration: Sendable, Equatable {
     public var exponentialFactor: Double       // Factor de back-off
     public var jitter: Duration                // Jitter aleatorio ±
     public var retryableStatusCodes: Set<Int>  // HTTP 429, 500…599 por defecto
-    public var retryableURLErrors: Set<URLError.Code>
+    public var retryableURLErrors: [URLError.Code]
     public var retryableMethods: Set<String>
 
     public static let `default` = RetryConfiguration(
@@ -28,4 +28,24 @@ public struct RetryConfiguration: Sendable, Equatable {
             .cannotConnectToHost, .dnsLookupFailed
         ], retryableMethods: ["GET", "HEAD", "PUT", "DELETE"]
     )
+
+    public init(
+        maxAttempts: Int,
+        baseDelay: Duration,
+        maxDelay: Duration,
+        exponentialFactor: Double,
+        jitter: Duration,
+        retryableStatusCodes: Set<Int>,
+        retryableURLErrors: [URLError.Code],
+        retryableMethods: Set<String>
+    ) {
+        self.maxAttempts = maxAttempts
+        self.baseDelay = baseDelay
+        self.maxDelay = maxDelay
+        self.exponentialFactor = exponentialFactor
+        self.jitter = jitter
+        self.retryableStatusCodes = retryableStatusCodes
+        self.retryableURLErrors = retryableURLErrors
+        self.retryableMethods = retryableMethods
+    }
 }

@@ -36,7 +36,7 @@ public final class RequestProvider: RequestProviderProtocol {
         let process = try await requestInterceptorAdapter.process(result, for: endpoint)
 
         switch process.result {
-        case .success(let data):
+        case .success:
             do {
                 return try decoder
                     .attemptDecode(type: T.self, from: process.data)

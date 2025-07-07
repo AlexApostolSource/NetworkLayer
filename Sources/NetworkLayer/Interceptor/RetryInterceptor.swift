@@ -75,19 +75,22 @@ public final actor RetryInterceptor: RequestInterceptor {
     // MARK: - Helpers
     private func shouldRetry(error: Error, urlKey: UUID, statusCode: Int?) -> Bool {
 
-       guard attempts[urlKey, default: 0] < config.maxAttempts else { return false }
+        guard attempts[urlKey, default: 0] < config.maxAttempts else { return false }
 
-        switch (error, statusCode) {
-        case (let networkError as NetworkError, let code?):
-            if case .http = networkError {
-                return config.retryableStatusCodes.contains(code)
+        switch (error) {
+        case (let networkError as NetworkError):
+            switch networkError {
+            case .transport(let urlError):
+                return config.retryableURLErrors.contains(urlError.code)
+            case .http:
+                guard let statusCode = statusCode else { return false }
+                return config.retryableStatusCodes.contains(statusCode)
             }
-        case (let urlErr as URLError, _):
-            return config.retryableURLErrors.contains(urlErr.code)
+        case (let urlError as URLError):
+            return config.retryableURLErrors.contains(urlError.code)
         default:
             return false
         }
-        return false
     }
 
     private func jitter(attempt: Int) -> UInt64 {
