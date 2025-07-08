@@ -21,7 +21,7 @@ public extension RetryConfiguration {
             .timedOut, .cannotFindHost, .networkConnectionLost,
             .cannotConnectToHost, .dnsLookupFailed
         ],
-        retryableMethods: Set<String> = ["GET", "HEAD", "PUT", "DELETE"]
+        retryableMethods: [URLRequestMethod] = [.DELETE, .GET, .HEAD, .POST, .PUT, .PATCH]
     ) -> RetryConfiguration {
 
         RetryConfiguration(

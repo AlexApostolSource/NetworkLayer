@@ -17,7 +17,8 @@ public final actor RetryInterceptor: RequestInterceptor {
     public init(networkLayer: NetworkLayerProtocol, config: RetryConfiguration = .default) {
         self.config = config
         self.networkLayer = networkLayer
-        self.retryableMethods = config.retryableMethods.map({ $0.lowercased() })
+        self.retryableMethods = config.retryableMethods
+            .map({ $0.rawValue.lowercased() })
     }
 
     public func process(
@@ -77,7 +78,7 @@ public final actor RetryInterceptor: RequestInterceptor {
 
         guard attempts[urlKey, default: 0] < config.maxAttempts else { return false }
 
-        switch (error) {
+        switch error {
         case (let networkError as NetworkError):
             switch networkError {
             case .transport(let urlError):

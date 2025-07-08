@@ -60,4 +60,10 @@ class MockEndpoint: NetworkLayerEndpoint {
     var method: URLRequestMethod {
         mockRequestMethodValue
     }
+
+    init(
+        mockRequestMethodValue: URLRequestMethod = .GET
+    ) {
+        self.mockRequestMethodValue = mockRequestMethodValue
+    }
 }

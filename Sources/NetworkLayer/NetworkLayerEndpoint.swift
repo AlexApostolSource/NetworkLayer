@@ -55,8 +55,11 @@ public extension NetworkLayerEndpoint {
     }
 }
 
-public enum URLRequestMethod: String {
+public enum URLRequestMethod: String, Sendable {
     case GET
     case POST
     case PUT
+    case PATCH
+    case HEAD
+    case DELETE
 }

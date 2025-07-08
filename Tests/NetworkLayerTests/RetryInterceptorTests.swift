@@ -43,7 +43,7 @@ struct RetryInterceptorTests {
     }
 
     @Test(
-        "Test_process_with_403StatusCode_shoulRetryOnce"
+        "Test_process_with_403StatusCode_shouldRetryOnce"
     ) func test_shouldRetryVariants() async throws {
         let nlMock = MockNetworkLayerCore()
         let data = Data("Test data".utf8)
@@ -104,6 +104,71 @@ struct RetryInterceptorTests {
             try await _ = sut.process(response, for: mockEndpoint)
         } catch {
             #expect(nlMock.executeCallCount == maxAttempts, "Should retry \(statusCode) statusCode for \(maxAttempts) times")
+        }
+    }
+
+    @Test(
+        "Test_process_with_URLStatusCode_shouldRetryForConfigMethod on error"
+    ) func test_shouldRetryVariantsConfigMethodMatch() async throws {
+        let nlMock = MockNetworkLayerCore()
+        let maxAttempts = 3
+        let statusCode = 403
+        let response = NetworkResponse.asMock(
+            result: .failure(.transport(URLError(.badServerResponse))),
+            statusCode: statusCode
+        )
+        let method = URLRequestMethod.PUT
+
+        let mockEndpoint = MockEndpoint(mockRequestMethodValue: method)
+
+        let config = RetryConfiguration.asMock(
+            maxAttempts: maxAttempts,
+            retryableStatusCodes: [statusCode],
+            retryableURLErrors: [.badServerResponse],
+            retryableMethods: [method]
+
+        )
+
+        let sut = makeSUT(config: config, networkLayer: nlMock)
+        do {
+            try await _ = sut.process(response, for: mockEndpoint)
+        } catch {
+            #expect(
+                nlMock.executeCallCount == 1,
+                "Should retry for \(method.rawValue) method once when error occurs"
+            )
+        }
+    }
+
+    @Test(
+        "Test_process_with_URLStatusCode_shouldNotRetry when config method and endpoint method don't match"
+    ) func test_shouldNotRetryVariantsConfigMethodDontMatch() async throws {
+        let nlMock = MockNetworkLayerCore()
+        let maxAttempts = 3
+        let statusCode = 403
+        let response = NetworkResponse.asMock(
+            result: .failure(.transport(URLError(.badServerResponse))),
+            statusCode: statusCode
+        )
+        let method = URLRequestMethod.PUT
+
+        let mockEndpoint = MockEndpoint(mockRequestMethodValue: method)
+
+        let config = RetryConfiguration.asMock(
+            maxAttempts: maxAttempts,
+            retryableStatusCodes: [statusCode],
+            retryableURLErrors: [.badServerResponse],
+            retryableMethods: [.GET]
+
+        )
+
+        let sut = makeSUT(config: config, networkLayer: nlMock)
+        do {
+            try await _ = sut.process(response, for: mockEndpoint)
+        } catch {
+            #expect(
+                Bool(false), "Should Not retry for \(method.rawValue) method when error occurs"
+            )
         }
     }
 
