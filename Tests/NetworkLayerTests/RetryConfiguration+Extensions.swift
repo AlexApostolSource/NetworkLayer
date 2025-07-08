@@ -12,8 +12,8 @@ public extension RetryConfiguration {
     /// Returns the standard retry configuration used across the SDK.
     static func asMock(
         maxAttempts: Int = 3,
-        baseDelay: Duration = .milliseconds(500),
-        maxDelay: Duration = .seconds(30),
+        baseDelay: Duration = .milliseconds(50),
+        maxDelay: Duration = .seconds(0.5),
         exponentialFactor: Double = 2.0,
         jitter: Duration = .milliseconds(100),
         retryableStatusCodes: Set<Int> = Set(500...599).union([408, 429]),

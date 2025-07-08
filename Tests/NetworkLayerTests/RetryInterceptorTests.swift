@@ -141,6 +141,51 @@ struct RetryInterceptorTests {
     }
 
     @Test(
+        "Test_process cancels when task is cancelled during retry"
+    ) func test_cancel_on_retry() async throws {
+        let nlMock = MockNetworkLayerCore()
+        let maxAttempts = 3
+        let statusCode = 403
+        let response = NetworkResponse.asMock(
+            result: .failure(.transport(URLError(.badServerResponse))),
+            statusCode: statusCode
+        )
+        let method = URLRequestMethod.PUT
+
+        let mockEndpoint = MockEndpoint(mockRequestMethodValue: method)
+
+        let config = RetryConfiguration.asMock(
+            maxAttempts: maxAttempts,
+            baseDelay: .milliseconds(50),
+            maxDelay: .seconds(0.5),
+            retryableStatusCodes: [statusCode],
+            retryableURLErrors: [.badServerResponse],
+            retryableMethods: [.GET]
+
+        )
+
+        let sut = makeSUT(config: config, networkLayer: nlMock)
+
+        let task = Task {
+            try await _ = sut.process(response, for: mockEndpoint)
+        }
+
+        task.cancel()
+
+        do {
+            try await task.value
+        } catch is CancellationError {
+            #expect(true, "CancellationError was thrown as expected")
+            #expect(
+                nlMock.executeCallCount == 0,
+                "Should not retry when task is cancelled"
+            )
+        } catch {
+            #expect(Bool(false), "CancellationError was expected but got: \(error)")
+        }
+    }
+
+    @Test(
         "Test_process_with_URLStatusCode_shouldNotRetry when config method and endpoint method don't match"
     ) func test_shouldNotRetryVariantsConfigMethodDontMatch() async throws {
         let nlMock = MockNetworkLayerCore()
