@@ -7,12 +7,12 @@
 import Foundation
 
 public struct RetryConfiguration: Sendable, Equatable {
-    public var maxAttempts: Int                // Nº máximo de intentos
-    public var baseDelay: Duration             // Retraso inicial
-    public var maxDelay: Duration             // Retraso inicial
-    public var exponentialFactor: Double       // Factor de back-off
-    public var jitter: Duration                // Jitter aleatorio ±
-    public var retryableStatusCodes: Set<Int>  // HTTP 429, 500…599 por defecto
+    public var maxAttempts: Int
+    public var baseDelay: Duration
+    public var maxDelay: Duration
+    public var exponentialFactor: Double
+    public var jitter: Duration
+    public var retryableStatusCodes: Set<Int>
     public var retryableURLErrors: [URLError.Code]
     public var retryableMethods: [URLRequestMethod]
 

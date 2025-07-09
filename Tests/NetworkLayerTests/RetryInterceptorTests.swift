@@ -217,6 +217,92 @@ struct RetryInterceptorTests {
         }
     }
 
+    @Test("Test_process_concurrentCalls_shouldBeIsolated")
+    func test_process_concurrentCalls_shouldBeIsolated() async throws {
+        let concurrentCalls = 10
+        let maxAttemps = 2
+        let nlMock = MockNetworkLayerCore()
+        nlMock.error = NetworkError.transport(URLError(.cannotConnectToHost))
+
+        let config = RetryConfiguration.asMock(
+            maxAttempts: maxAttemps,
+            baseDelay: .milliseconds(10),
+            jitter: .seconds(0),
+            retryableURLErrors: [.cannotConnectToHost]
+        )
+        let sut = makeSUT(config: config, networkLayer: nlMock)
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for _ in 0..<concurrentCalls {
+                group.addTask {
+                    let response = NetworkResponse.asMock(
+                        result: .failure(NetworkError.transport(URLError(.cannotConnectToHost)))
+                    )
+                    let endpoint = MockEndpoint()
+                    do {
+                        _ = try await sut.process(response, for: endpoint)
+                    } catch {}
+                }
+            }
+            try await group.waitForAll()
+        }
+
+        // -- Verificación -----------------------------------------------------
+        let calls = nlMock.executeCallCount
+        #expect(
+            calls == concurrentCalls * maxAttemps,
+            "Each call should retry independently, expected \(concurrentCalls * maxAttemps) calls, got \(calls)"
+        )
+    }
+
+    @Test("Test_process_concurrentCancelOneTask_shouldNotAffectOthers")
+    func test_process_concurrentCancelOneTask_shouldNotAffectOthers() async throws {
+
+        // -- Configuración ----------------------------------------------------
+        let totalTasks = 6
+        let cancelIndex = 2
+        let nlMock = MockNetworkLayerCore()
+
+        let config = RetryConfiguration.asMock(
+            maxAttempts: 3,
+            baseDelay: .milliseconds(20),
+            maxDelay: .seconds(0.5),
+            jitter: .seconds(0),
+            retryableURLErrors: [.networkConnectionLost]
+        )
+        let sut = makeSUT(config: config, networkLayer: nlMock)
+
+        var tasks: [Task<Void, Error>] = []
+        for _ in 0..<totalTasks {
+            let task = Task {
+                let response = NetworkResponse.asMock(
+                    result: .failure(NetworkError.transport(URLError(.networkConnectionLost)))
+                )
+                let endpoint = MockEndpoint()
+                do {
+                    _ = try await sut.process(response, for: endpoint)
+                } catch is CancellationError {
+                    // Solo uno debe caer aquí
+                }
+            }
+            tasks.append(task)
+        }
+
+        tasks[cancelIndex].cancel()
+
+        for task in tasks {
+            _ = try? await task.value
+        }
+
+        let calls = nlMock.executeCallCount
+        #expect(
+            calls == totalTasks - 1,
+            """
+            expected \(totalTasks - 1) calls, got \(calls).
+            """
+        )
+    }
+
     private func makeSUT(
         config: RetryConfiguration = RetryConfiguration.default,
         networkLayer: NetworkLayerProtocol = MockNetworkLayerCore()
