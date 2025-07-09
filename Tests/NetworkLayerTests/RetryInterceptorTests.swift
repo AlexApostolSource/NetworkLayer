@@ -217,10 +217,9 @@ struct RetryInterceptorTests {
         }
     }
 
-    @Test("Test_process_concurrentCalls_shouldBeIsolated")
-    func test_process_concurrentCalls_shouldBeIsolated() async throws {
+    @Test("Test_process_concurrentCalls_shouldBeIsolated", arguments: [1, 2, 3])
+    func test_process_concurrentCalls_shouldBeIsolated(maxAttemps: Int) async throws {
         let concurrentCalls = 10
-        let maxAttemps = 2
         let nlMock = MockNetworkLayerCore()
         nlMock.error = NetworkError.transport(URLError(.cannotConnectToHost))
 
@@ -255,16 +254,18 @@ struct RetryInterceptorTests {
         )
     }
 
-    @Test("Test_process_concurrentCancelOneTask_shouldNotAffectOthers")
-    func test_process_concurrentCancelOneTask_shouldNotAffectOthers() async throws {
+    @Test(
+        "Test_process_concurrentCancelOneTask_shouldNotAffectOthers",
+        arguments: [1, 2, 3]
+    )
+    func test_process_concurrentCancelOneTask_shouldNotAffectOthers(maxAttempts: Int) async throws {
 
-        // -- Configuración ----------------------------------------------------
         let totalTasks = 6
         let cancelIndex = 2
         let nlMock = MockNetworkLayerCore()
 
         let config = RetryConfiguration.asMock(
-            maxAttempts: 3,
+            maxAttempts: maxAttempts,
             baseDelay: .milliseconds(20),
             maxDelay: .seconds(0.5),
             jitter: .seconds(0),
@@ -281,9 +282,7 @@ struct RetryInterceptorTests {
                 let endpoint = MockEndpoint()
                 do {
                     _ = try await sut.process(response, for: endpoint)
-                } catch is CancellationError {
-                    // Solo uno debe caer aquí
-                }
+                } catch is CancellationError {}
             }
             tasks.append(task)
         }
