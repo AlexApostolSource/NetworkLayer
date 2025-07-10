@@ -1,7 +1,7 @@
 @testable import NetworkLayer
 import XCTest
 
-final class NetworkLayerTests: XCTestCase {
+final class NetworkLayerEndpointTests: XCTestCase {
     func test_endpoint() {
         let mockEndpoint = MockEndpoint()
         XCTAssertNotNil(mockEndpoint.asURLRequest)
