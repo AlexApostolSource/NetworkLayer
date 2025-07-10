@@ -10,4 +10,5 @@ public enum NetworkLayerError: Error {
     case malformedRequest
     case cannotIdentifyRetryRequest(key: UUID)
     case unknown(error: Error)
+    case decodingFailed(error: Error, data: Data)
 }

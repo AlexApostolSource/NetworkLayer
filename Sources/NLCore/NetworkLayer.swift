@@ -7,15 +7,12 @@ public protocol NetworkLayerProtocol {
 public final class NetworkLayer: NetworkLayerProtocol {
     private let networkLayerCore: NetworkLayerCoreProtocol
     private let logger: NetworkLayerLogger?
-    private let decoder: NetworkLayerDecoder
     public init(
         urlSession: URLSession = .shared,
-        logger: NetworkLayerLogger?,
-        decoder: NetworkLayerDecoder = JSONDecoder()
+        logger: NetworkLayerLogger?
     ) {
         self.logger = logger
         self.networkLayerCore = NetworkLayerCore(session: urlSession, logger: logger)
-        self.decoder = decoder
     }
 
     public func execute(request: URLRequest) async throws -> NetworkResponse {

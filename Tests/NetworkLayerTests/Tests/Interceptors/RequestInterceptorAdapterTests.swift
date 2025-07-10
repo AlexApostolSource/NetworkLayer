@@ -11,7 +11,7 @@ import NLCore
 import Testing
 
 @Suite
-struct RequestInterceptorTests {
+struct RequestInterceptorAdapterTests {
     let endpoint = MockEndpoint()
     let mockKey = "mockKey"
     let mockValue = "mockValue"

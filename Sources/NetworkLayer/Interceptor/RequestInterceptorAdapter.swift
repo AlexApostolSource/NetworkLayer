@@ -7,8 +7,17 @@
 import Foundation
 import NLCore
 
-public struct RequestInterceptorAdapter: Sendable {
-    private let interceptors: [RequestInterceptor]
+public protocol RequestInterceptorAdapterProtocol: Sendable {
+    var interceptors: [RequestInterceptor] { get }
+    func adapt(endpoint: NetworkLayerEndpoint) async throws -> URLRequest
+    func process(
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse
+}
+
+public struct RequestInterceptorAdapter: RequestInterceptorAdapterProtocol {
+    public let interceptors: [RequestInterceptor]
 
     public init(interceptors: [RequestInterceptor]) {
         self.interceptors = interceptors
@@ -23,7 +32,7 @@ public struct RequestInterceptorAdapter: Sendable {
         return request
     }
 
-    func process(
+    public func process(
         _ result: NetworkResponse,
         for endpoint: NetworkLayerEndpoint
     ) async throws -> NetworkResponse {

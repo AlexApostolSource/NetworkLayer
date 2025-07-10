@@ -12,6 +12,11 @@ public protocol NetworkLayerDecoder {
 
 extension JSONDecoder: NetworkLayerDecoder {
     public func attemptDecode<T: Decodable>(type: T.Type, from: Data) throws -> T {
-        return try self.decode(type, from: from)
+        do {
+            return try self.decode(type, from: from)
+
+        } catch {
+            throw NetworkLayerError.decodingFailed(error: error, data: from)
+        }
     }
 }

@@ -14,13 +14,13 @@ public protocol RequestProviderProtocol {
 
 public final class RequestProvider: RequestProviderProtocol {
     private let networkLayer: NetworkLayerProtocol
-    private let requestInterceptorAdapter: RequestInterceptorAdapter
+    private let requestInterceptorAdapter: RequestInterceptorAdapterProtocol
     private let decoder: NetworkLayerDecoder
     private let logger: NetworkLayerLogger?
 
     public init(
         networkLayer: NetworkLayerProtocol,
-        requestInterceptorAdapter: RequestInterceptorAdapter,
+        requestInterceptorAdapter: RequestInterceptorAdapterProtocol,
         decoder: NetworkLayerDecoder = JSONDecoder(),
         logger: NetworkLayerLogger?
     ) {
