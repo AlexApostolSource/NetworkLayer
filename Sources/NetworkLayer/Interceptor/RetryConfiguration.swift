@@ -6,7 +6,7 @@
 //
 import Foundation
 
-public struct RetryConfiguration: Sendable, Equatable {
+public struct RetryConfiguration: Sendable {
     public var maxAttempts: Int
     public var baseDelay: Duration
     public var maxDelay: Duration

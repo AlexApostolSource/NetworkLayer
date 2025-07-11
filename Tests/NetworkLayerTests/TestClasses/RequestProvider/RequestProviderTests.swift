@@ -46,12 +46,57 @@ struct RequestProviderTests {
     @Test func testRequestProviderCallsAdaptAndProcessInRightOrder() async throws {
         let mockResult = MockResult(value: "test")
         let nlMock = try makeMockNL(data: mockResult)
-        let sut = makeSUT(mockNL: nlMock)
+        let mockInterceptor = MockRequestInterceptor()
+        let mockAdapter = MockRequestInterceptorAdapter(interceptors: [mockInterceptor])
+        let sut = makeSUT(mockNL: nlMock, interceptor: mockAdapter)
 
-        let mockResultDecoded: MockResult = try await sut.execute(endpoint: MockEndpoint())
+        let _: MockResult = try await sut.execute(endpoint: MockEndpoint())
 
-        #expect(mockResultDecoded.value == mockResult.value)
-        #expect(nlMock.executeCallCount == 1)
+        #expect(mockAdapter.callOrder == [.adapt, .process])
+    }
+
+    @Test() func testRequestProviderOnDecodingErrorLogsError() async throws {
+        let mockResult = Data()
+        let nlMock = try makeMockNL(data: mockResult)
+        let logger = MockNetworkLogger()
+        let sut = makeSUT(mockNL: nlMock, logger: logger)
+
+        do {
+            let _: MockResult = try await sut.execute(endpoint: MockEndpoint())
+            #expect(Bool(false), "Error expected but not thrown.")
+        } catch let error as NetworkLayerError {
+            switch error {
+            case .decodingFailed:
+                #expect(logger.logCallCount == 1, "Logger should log the error.")
+            default:
+                #expect(Bool(false), "Unexpected error type thrown: \(error)")
+            }
+        } catch {
+            #expect(Bool(false), "Unexpected error type thrown: \(error)")
+        }
+    }
+
+    @Test() func testRequestProviderOnUnknownErrorLogsError() async throws {
+        let mockResult = Data()
+        let error = MockError.network
+        let nlMock = try makeMockNL(data: mockResult)
+        nlMock.error = NetworkLayerError.unknown(error: error)
+        let logger = MockNetworkLogger()
+        let sut = makeSUT(mockNL: nlMock, logger: logger)
+
+        do {
+            let _: MockResult = try await sut.execute(endpoint: MockEndpoint())
+            #expect(Bool(false), "Error expected but not thrown.")
+        } catch let error as NetworkLayerError {
+            switch error {
+            case .decodingFailed:
+                #expect(Bool(false), "Unexpected error type thrown: \(error)")
+            default:
+                #expect(logger.logCallCount == 1, "Logger should log the error.")
+            }
+        } catch {
+            #expect(Bool(false), "Unexpected error type thrown: \(error)")
+        }
     }
 
     private func makeSUT(
@@ -68,7 +113,7 @@ struct RequestProviderTests {
         )
     }
 
-    private func makeMockNL(data: Codable) throws -> MockNetworkLayerCore {
+    private func makeMockNL(data: Codable = Data()) throws -> MockNetworkLayerCore {
         let mockData = try JSONEncoder().encode(data)
         let mockResponse = NetworkResponse.asMock(data: mockData)
         let nlMock = MockNetworkLayerCore(response: mockResponse)
@@ -78,4 +123,9 @@ struct RequestProviderTests {
 
 struct MockResult: Codable {
     let value: String
+}
+
+enum MockError: Error {
+    case decoding
+    case network
 }

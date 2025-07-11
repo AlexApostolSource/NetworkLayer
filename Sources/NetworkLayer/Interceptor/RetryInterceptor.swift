@@ -86,6 +86,8 @@ public final actor RetryInterceptor: RequestInterceptor {
             case .http:
                 guard let statusCode = statusCode else { return false }
                 return config.retryableStatusCodes.contains(statusCode)
+            case .unknown:
+                return false
             }
         case (let urlError as URLError):
             return config.retryableURLErrors.contains(urlError.code)

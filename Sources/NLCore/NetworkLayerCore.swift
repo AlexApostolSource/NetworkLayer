@@ -56,6 +56,8 @@ public enum NetworkError: Error {
     /// HTTP status code outside `200…299`.  Includes the raw body so the caller
     /// can parse server-side error objects (e.g. `{ "error": "token_expired" }`).
     case http(data: Data, response: HTTPURLResponse)
+
+    case unknown(Error)
 }
 
 // MARK: - Protocol
@@ -87,7 +89,8 @@ final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
         do {
             let (data, response) = try await session.data(for: request)
 
-            // --- HTTP status-code validation --------------------------
+            /// If the response is a `HTTPURLResponse`, check the status code.
+            /// If it is not in the 2xx range, log it and return a failure.
             if let http = response as? HTTPURLResponse,
                !(200...299).contains(http.statusCode) {
 
@@ -117,6 +120,8 @@ final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
         } catch let urlError as URLError {
             // Pure transport failure: propagate as `NetworkError.transport`.
             throw NetworkError.transport(urlError)
+        } catch {
+            throw NetworkError.unknown(error)
         }
     }
 }

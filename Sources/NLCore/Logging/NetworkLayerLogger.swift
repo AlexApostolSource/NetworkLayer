@@ -19,6 +19,7 @@ public enum NetworkLayerLoggingSubsystem {
     case decoding(Error)
     case urlRequestFailing(Error)
     case serverStatusCode(Int)
+    case network(Error)
 }
 
 public struct NetworkLayerLogMetadata {
