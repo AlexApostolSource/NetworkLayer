@@ -76,11 +76,9 @@ public protocol NetworkLayerCoreProtocol {
 
 final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
     private let session: URLSession
-    private let logger: NetworkLayerLogger?
 
-    init(session: URLSession = .shared, logger: NetworkLayerLogger? = nil) {
+    init(session: URLSession = .shared) {
         self.session = session
-        self.logger  = logger
     }
 
     /// Performs the `URLSession` call, maps non-2xx statuses to `.failure`,
@@ -93,14 +91,6 @@ final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
             /// If it is not in the 2xx range, log it and return a failure.
             if let http = response as? HTTPURLResponse,
                !(200...299).contains(http.statusCode) {
-
-                logger?.log(
-                    logMetadata: NetworkLayerLogMetadata(
-                        logLevel: .error,
-                        subsystem: .serverStatusCode(http.statusCode)
-                    )
-                )
-
                 return NetworkResponse(
                     data: data,
                     response: http,

@@ -39,7 +39,7 @@ struct RetryInterceptorTests {
         let sut = makeSUT(networkLayer: nlMock)
 
         try await _ = sut.process(response, for: mockEndpoint)
-        #expect(nlMock.executeCallCount == 0, "Should not retry \(statusCode) statusCode")
+        #expect(await nlMock.executeCallCount == 0, "Should not retry \(statusCode) statusCode")
     }
 
     @Test(
@@ -74,7 +74,7 @@ struct RetryInterceptorTests {
         let sut = makeSUT(config: config, networkLayer: nlMock)
 
         try await _ = sut.process(response, for: mockEndpoint)
-        #expect(nlMock.executeCallCount == 1, "Should retry \(statusCode) statusCode")
+        #expect(await nlMock.executeCallCount == 1, "Should retry \(statusCode) statusCode")
     }
 
     @Test(
@@ -103,7 +103,7 @@ struct RetryInterceptorTests {
         do {
             try await _ = sut.process(response, for: mockEndpoint)
         } catch {
-            #expect(nlMock.executeCallCount == maxAttempts, "Should retry \(statusCode) statusCode for \(maxAttempts) times")
+            #expect(await nlMock.executeCallCount == maxAttempts, "Should retry \(statusCode) statusCode for \(maxAttempts) times")
         }
     }
 
@@ -134,7 +134,7 @@ struct RetryInterceptorTests {
             try await _ = sut.process(response, for: mockEndpoint)
         } catch {
             #expect(
-                nlMock.executeCallCount == 1,
+                await nlMock.executeCallCount == 1,
                 "Should retry for \(method.rawValue) method once when error occurs"
             )
         }
@@ -177,7 +177,7 @@ struct RetryInterceptorTests {
         } catch is CancellationError {
             #expect(true, "CancellationError was thrown as expected")
             #expect(
-                nlMock.executeCallCount == 0,
+                await nlMock.executeCallCount == 0,
                 "Should not retry when task is cancelled"
             )
         } catch {
@@ -246,7 +246,8 @@ struct RetryInterceptorTests {
             try await group.waitForAll()
         }
 
-        let calls = nlMock.executeCallCount
+        let calls = await nlMock.executeCallCount
+        print("[Alex]Calls", calls)
         #expect(
             calls == concurrentCalls * maxAttemps,
             "Each call should retry independently, expected \(concurrentCalls * maxAttemps) calls, got \(calls)"
@@ -292,7 +293,7 @@ struct RetryInterceptorTests {
             _ = try? await task.value
         }
 
-        let calls = nlMock.executeCallCount
+        let calls = await nlMock.executeCallCount
         #expect(
             calls == totalTasks - 1,
             """

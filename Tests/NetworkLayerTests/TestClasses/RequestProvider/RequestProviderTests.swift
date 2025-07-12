@@ -20,7 +20,7 @@ struct RequestProviderTests {
         let mockResultDecoded: MockResult = try await sut.execute(endpoint: MockEndpoint())
 
         #expect(mockResultDecoded.value == mockResult.value)
-        #expect(nlMock.executeCallCount == 1)
+        #expect(await nlMock.executeCallCount == 1)
     }
 
     @Test func testRequestProviderDecodeError() async throws {
@@ -99,7 +99,7 @@ struct RequestProviderTests {
         }
     }
 
-    @Test() func testRequestProviderNonHTTPResponse() async throws {
+    @Test() func testNon200To299RequestProviderHTTPResponseLogsError() async throws {
         let mockResult = Data()
         let url = try #require(URL(string: "https://example.com"))
         let response = try #require(HTTPURLResponse(
