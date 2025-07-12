@@ -99,6 +99,41 @@ struct RequestProviderTests {
         }
     }
 
+    @Test() func testRequestProviderNonHTTPResponse() async throws {
+        let mockResult = Data()
+        let url = try #require(URL(string: "https://example.com"))
+        let response = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 567,
+            httpVersion: nil,
+            headerFields: nil
+        ))
+
+        let mockResponse = NetworkResponse.asMock(
+            result: .failure(.http(data: mockResult, response: response))
+        )
+
+        let nlMock = try makeMockNL()
+        nlMock.response = mockResponse
+        let logger = MockNetworkLogger()
+        let sut = makeSUT(mockNL: nlMock, logger: logger)
+
+        do {
+            let _: MockResult = try await sut.execute(endpoint: MockEndpoint())
+            #expect(Bool(false), "Error expected but not thrown.")
+        } catch let error as NetworkLayerError {
+            switch error {
+            case .decodingFailed:
+                #expect(Bool(false), "Unexpected error type thrown: \(error)")
+            default:
+                #expect(Bool(false), "Unexpected error type thrown: \(error)")
+            }
+        } catch {
+            #expect(logger.logCallCount == 1, "Logger should log the error.")
+
+        }
+    }
+
     private func makeSUT(
         mockNL: NetworkLayerProtocol = MockNetworkLayerCore(),
         interceptor: RequestInterceptorAdapterProtocol = MockRequestInterceptorAdapter(
