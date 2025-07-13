@@ -6,8 +6,8 @@ public protocol NetworkLayerProtocol {
 
 public final class NetworkLayer: NetworkLayerProtocol {
     private let networkLayerCore: NetworkLayerCoreProtocol
-    public init(urlSession: URLSession = .shared) {
-        self.networkLayerCore = NetworkLayerCore(session: urlSession)
+    public init(session: NetworkLayerSession = URLSession.shared) {
+        self.networkLayerCore = NetworkLayerCore(session: session)
     }
 
     public func execute(request: URLRequest) async throws -> NetworkResponse {

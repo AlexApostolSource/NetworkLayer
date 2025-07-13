@@ -75,9 +75,9 @@ public protocol NetworkLayerCoreProtocol {
 // MARK: - Concrete Implementation
 
 final class NetworkLayerCore: NetworkLayerCoreProtocol, Sendable {
-    private let session: URLSession
+    private let session: NetworkLayerSession
 
-    init(session: URLSession = .shared) {
+    init(session: NetworkLayerSession) {
         self.session = session
     }
 
