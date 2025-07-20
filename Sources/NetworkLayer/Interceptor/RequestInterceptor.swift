@@ -18,6 +18,11 @@ public protocol RequestInterceptor: Sendable {
         _ result: NetworkResponse,
         for endpoint: NetworkLayerEndpoint
     ) async throws -> NetworkResponse
+
+    func adapt(chain: RequestChainProtocol,
+               _ request: URLRequest,
+               for endpoint: any NetworkLayerEndpoint
+    ) async throws -> URLRequest
 }
 
 public extension RequestInterceptor {
@@ -31,5 +36,12 @@ public extension RequestInterceptor {
         for endpoint: NetworkLayerEndpoint
     ) async throws -> NetworkResponse {
         result
+    }
+
+    func adapt(chain: RequestChainProtocol,
+               _ request: URLRequest,
+               for endpoint: any NetworkLayerEndpoint
+    ) async throws -> URLRequest {
+        return request
     }
 }

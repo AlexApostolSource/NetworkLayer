@@ -185,6 +185,17 @@ private final class MockInterceptor: @unchecked Sendable, RequestInterceptor {
         return mutableRequest
     }
 
+    func adapt(
+        chain: any RequestChainProtocol,
+        _ request: URLRequest,
+        for endpoint: any NetworkLayerEndpoint
+    ) async throws -> URLRequest {
+        guard let key = key, let value = value else { return request }
+        var mutableRequest = request
+        mutableRequest.addValue(value, forHTTPHeaderField: key)
+        return try await chain.proceed(mutableRequest, for: endpoint)
+    }
+
     func process(
         _ result: NetworkResponse,
         for endpoint: NetworkLayerEndpoint

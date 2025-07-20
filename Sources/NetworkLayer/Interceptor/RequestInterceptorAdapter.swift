@@ -24,12 +24,9 @@ public struct RequestInterceptorAdapter: RequestInterceptorAdapterProtocol {
     }
 
     public func adapt(endpoint: NetworkLayerEndpoint) async throws -> URLRequest {
-        guard var request = endpoint.asURLRequest else { throw NetworkLayerError.malformedRequest }
-        for interceptor in interceptors {
-            try Task.checkCancellation()
-            request = try await interceptor.adapt(request, for: endpoint)
-        }
-        return request
+        guard let request = endpoint.asURLRequest else { throw NetworkLayerError.malformedRequest }
+        let chain = RequestChain(interceptors: interceptors)
+        return try await chain.proceed(request, for: endpoint)
     }
 
     public func process(
@@ -43,5 +40,20 @@ public struct RequestInterceptorAdapter: RequestInterceptorAdapterProtocol {
             current = try await interceptor.process(current, for: endpoint)
         }
         return current
+    }
+
+    public func process(
+        chain: RequestChainProtocol,
+        _ result: NetworkResponse,
+        for endpoint: NetworkLayerEndpoint
+    ) async throws -> NetworkResponse {
+        return result
+    }
+
+    func adapt(chain: RequestChainProtocol,
+               _ request: URLRequest,
+               for endpoint: any NetworkLayerEndpoint
+    ) async throws -> URLRequest {
+        return request
     }
 }
