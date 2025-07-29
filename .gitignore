@@ -20,4 +20,3 @@ Package.resolved
 .vscode
 Utilities/InstalledSwiftPMConfiguration/config.json
 .devcontainer
-.swiftlint-cache

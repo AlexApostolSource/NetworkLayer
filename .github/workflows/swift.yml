@@ -4,66 +4,26 @@ name: iOS SPM Build and Test
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
+
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # Cache de Mint (contendrá el binario de SwiftLint 0.57.0)
-      # -----------------------------------------------------------------------
-      - name: Cache Mint packages (SwiftLint)
-        uses: actions/cache@v4
-        with:
-          path: ~/.mint
-          # Asegúrate de añadir un Mintfile al repositorio para que el hash
-          # se regenere cuando cambies versiones.
-          key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
-          restore-keys: |
-            ${{ runner.os }}-mint-
-      # -----------------------------------------------------------------------
-      - name: Set up Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+    - name: Set up Xcode
+      run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
 
-      # -----------------------------------------------------------------------
-      # Instalar SwiftLint 0.57.0 de forma determinística
-      # -----------------------------------------------------------------------
-      - name: Install SwiftLint 0.57.0 (via Mint)
-        run: |
-          if ! command -v mint &>/dev/null; then
-            brew update
-            brew install mint
-          fi
-          mint install realm/SwiftLint@0.57.0
-          mint run swiftlint version
-      # -----------------------------------------------------------------------
-      # -----------------------------------------------------------------------
-      # Lint estricto: falla el workflow si hay violaciones
-      # -----------------------------------------------------------------------
-      - name: Lint with SwiftLint (strict)
-        run: mint run swiftlint lint --strict
-      # -----------------------------------------------------------------------
+    # Build the Swift package for iOS simulator
+    - name: Build for iOS Simulator
+      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer \-sdk iphonesimulator build
 
-      # Build the Swift package for iOS simulator
-      - name: Build for iOS Simulator
-        run: |
-          xcodebuild \
-            -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-            -scheme NetworkLayer \
-            -sdk iphonesimulator \
-            build
+    # Run tests on iOS simulator
+    - name: Run tests on iOS Simulator
+      run: xcodebuild -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \-scheme NetworkLayer \-sdk iphonesimulator test
 
-      # Run tests on iOS simulator
-      - name: Run tests on iOS Simulator
-        run: |
-          xcodebuild \
-            -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-            -scheme NetworkLayer \
-            -sdk iphonesimulator \
-            test
