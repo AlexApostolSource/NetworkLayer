@@ -8,39 +8,58 @@
 import Foundation
 
 public protocol NetworkLayerEndpoint {
-    var queryItems: [URLQueryItem] { get}
+    var queryItems: [URLQueryItem] { get }
     var path: String { get }
     var method: URLRequestMethod { get }
     var asURLRequest: URLRequest? { get }
     var host: String { get }
     var scheme: String { get }
+    var timeout: TimeInterval { get }
+    var headers: [String: String]? { get }
+    var requiredAuth: Bool { get }
 }
 
-extension NetworkLayerEndpoint {
+public extension NetworkLayerEndpoint {
     var host: String {
         NetworkLayerConfig.host
     }
-    
+
+    var timeout: TimeInterval {
+        60
+    }
+
     var scheme: String {
         "https"
     }
-    
+
+    var requiredAuth: Bool { false }
+    var headers: [String: String]? { nil }
+
     var asURLRequest: URLRequest? {
         var urlComponent = URLComponents()
         urlComponent.host = host
         urlComponent.path = path
         urlComponent.queryItems = queryItems
         urlComponent.scheme = scheme
-       
+
         guard let url = urlComponent.url else { return nil }
-        var  request = URLRequest(url: url)
+        var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
+        request.timeoutInterval = timeout
+        if let headers {
+            for (key, value) in headers {
+                request.addValue(value, forHTTPHeaderField: key)
+            }
+        }
         return request
     }
 }
 
-public enum URLRequestMethod: String {
+public enum URLRequestMethod: String, Sendable {
     case GET
     case POST
     case PUT
+    case PATCH
+    case HEAD
+    case DELETE
 }

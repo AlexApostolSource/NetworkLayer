@@ -8,15 +8,42 @@ let package = Package(
     products: [
         .library(
             name: "NetworkLayer",
-            targets: ["NetworkLayer"]),
+            targets: ["NetworkLayer"]
+        )
     ],
     targets: [
-        .target(name: "NLCore"),
+        .plugin(
+            name: "SwiftLintBuildToolPlugin",
+            capability: .buildTool()
+        ),
+        .target(name: "NLCore", plugins: [
+            .plugin(
+                name: "SwiftLintBuildToolPlugin"
+            )
+        ]),
         .target(
-            name: "NetworkLayer", dependencies: ["NLCore"]),
+            name: "NetworkLayer", dependencies: ["NLCore"], plugins: [
+                .plugin(
+                    name: "SwiftLintBuildToolPlugin"
+                )
+            ]
+        ),
         .testTarget(
             name: "NetworkLayerTests",
-            dependencies: ["NetworkLayer"]
+            dependencies: ["NetworkLayer"], plugins: [
+                .plugin(
+                    name: "SwiftLintBuildToolPlugin"
+                )
+            ]
         ),
+
+        .testTarget(
+            name: "NLCoreTests",
+            dependencies: ["NLCore"], plugins: [
+                .plugin(
+                    name: "SwiftLintBuildToolPlugin"
+                )
+            ]
+        )
     ]
 )

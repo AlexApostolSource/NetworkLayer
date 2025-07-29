@@ -1,0 +1,51 @@
+//
+//  RetryConfiguration.swift
+//  NetworkLayer
+//
+//  Created by Alex.personal on 1/7/25.
+//
+import Foundation
+
+public struct RetryConfiguration: Sendable {
+    public var maxAttempts: Int
+    public var baseDelay: Duration
+    public var maxDelay: Duration
+    public var exponentialFactor: Double
+    public var jitter: Duration
+    public var retryableStatusCodes: Set<Int>
+    public var retryableURLErrors: [URLError.Code]
+    public var retryableMethods: [URLRequestMethod]
+
+    public static let `default` = RetryConfiguration(
+        maxAttempts: 3,
+        baseDelay: .milliseconds(500),
+        maxDelay: .seconds(30),
+        exponentialFactor: 2.0,
+        jitter: .milliseconds(100),
+        retryableStatusCodes: Set(500...599).union([408, 429]),
+        retryableURLErrors: [
+            .timedOut, .cannotFindHost, .networkConnectionLost,
+            .cannotConnectToHost, .dnsLookupFailed
+        ], retryableMethods: [.DELETE, .GET, .HEAD, .POST, .PUT, .PATCH]
+    )
+
+    public init(
+        maxAttempts: Int,
+        baseDelay: Duration,
+        maxDelay: Duration,
+        exponentialFactor: Double,
+        jitter: Duration,
+        retryableStatusCodes: Set<Int>,
+        retryableURLErrors: [URLError.Code],
+        retryableMethods: [URLRequestMethod]
+    ) {
+        self.maxAttempts = maxAttempts
+        self.baseDelay = baseDelay
+        self.maxDelay = maxDelay
+        self.exponentialFactor = exponentialFactor
+        self.jitter = jitter
+        self.retryableStatusCodes = retryableStatusCodes
+        self.retryableURLErrors = retryableURLErrors
+        self.retryableMethods = retryableMethods
+    }
+}

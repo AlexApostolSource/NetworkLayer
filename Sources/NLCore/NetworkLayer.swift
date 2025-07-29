@@ -1,22 +1,16 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 import Foundation
 
 public protocol NetworkLayerProtocol {
-    func execute<T: Decodable>(request: URLRequest)  async throws -> T
+    func execute(request: URLRequest) async throws -> NetworkResponse
 }
 
 public final class NetworkLayer: NetworkLayerProtocol {
-   private let networkLayerCore: NetworkLayerCoreProtocol
-    
-    public init(urlSession: URLSession = .shared) {
-        self.networkLayerCore = NetworkLayerCore(session: urlSession)
+    private let networkLayerCore: NetworkLayerCoreProtocol
+    public init(session: NetworkLayerSession = URLSession.shared) {
+        self.networkLayerCore = NetworkLayerCore(session: session)
     }
-    
-    public func execute<T: Decodable>(request: URLRequest)  async throws -> T {
-        let (data, _) = try await networkLayerCore.execute(request: request)
-        let decoder = JSONDecoder()
-        return try decoder.decode(T.self, from: data)
+
+    public func execute(request: URLRequest) async throws -> NetworkResponse {
+        return try await networkLayerCore.execute(request: request)
     }
 }
