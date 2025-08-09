@@ -11,14 +11,21 @@ jobs:
     runs-on: macos-latest
     env:
       SCHEME: NetworkLayer
-      DESTINATION: "platform=iOS Simulator,name=iPhone 14,OS=latest"
+      DESTINATION: "platform=iOS Simulator,name=iPhone 15,OS=latest"
       DERIVED_DATA: ${{ github.workspace }}/DerivedData
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Xcode
-        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+      - name: Select Xcode 16.2
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.2"
+
+      - name: Print Xcode version
+        run: |
+          xcodebuild -version
+          xcode-select -p
 
       # Instalar SwiftLint desde Homebrew
       - name: Install SwiftLint via Homebrew
