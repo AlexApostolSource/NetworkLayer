@@ -7,42 +7,44 @@ struct SwiftLintBuildToolPlugin: BuildToolPlugin {
         context: PluginContext,
         target: Target
     ) throws -> [Command] {
-        let swiftlint = try Self.findSwiftLint()
+        guard target is SourceModuleTarget else { return [] }
 
-        guard let module = target as? SourceModuleTarget else { return [] }
-        let sources = module.sourceFiles(withSuffix: "swift")
-            .map(\.path.string)
+        // Directorio de trabajo del paquete (donde vive .swiftlint.yml habitualmente)
+        let packageDir = context.package.directory.string
+        let cacheDir = context.pluginWorkDirectory.string
+
+        // Construimos un comando de shell de login (-l) y modo comando (-c):
+        // 1) cd al paquete para que SwiftLint encuentre .swiftlint.yml
+        // 2) invocar 'swiftlint' del sistema sin rutas
+        // NOTA: no pasamos ficheros individuales; que resuelva la config/paths el propio SwiftLint
+        let shell = Path("/bin/sh")
+
+        // Permite inyectar flags opcionales desde el entorno (p. ej., en CI):
+        let extra = ProcessInfo.processInfo.environment["SWIFTLINT_OPTIONS"] ?? ""
+
+        let command = """
+        cd "\(packageDir)" && \
+        swiftlint lint --quiet --cache-path "\(cacheDir)" \(extra)
+        """
+
+        // Pasamos el entorno tal cual (sin tocar PATH). La shell de login cargará tu PATH de usuario.
+        var env = ProcessInfo.processInfo.environment
+        // En algunos entornos de build HOME no está; mejor garantizarlo si existe.
+        if env["HOME"] == nil,
+           let home = FileManager.default.homeDirectoryForCurrentUser.path.addingPercentEncoding(
+            withAllowedCharacters: .urlPathAllowed
+           ) {
+            env["HOME"] = home
+        }
+
         return [
             .prebuildCommand(
                 displayName: "SwiftLint (\(target.name))",
-                executable: swiftlint,
-                arguments: ["lint",
-                            "--quiet",
-                            "--cache-path", context.pluginWorkDirectory.string]
-                    + sources,
-                environment: [:],
+                executable: shell,
+                arguments: ["-lc", command], // -l (login) + -c (command)
+                environment: env,
                 outputFilesDirectory: context.pluginWorkDirectory
             )
         ]
-    }
-
-    // --------------------------------------------------------------------
-
-    // MARK: - Helpers
-
-    // --------------------------------------------------------------------
-
-    /// Busca SwiftLint en las rutas más habituales.
-    static func findSwiftLint() throws -> Path {
-        let candidates = [
-            "/opt/homebrew/bin/swiftlint", // Brew (Apple Silicon)
-            "/usr/local/bin/swiftlint", // Brew (Intel)
-            "/usr/bin/swiftlint" // Xcode 15+ Toolchain
-        ]
-        let fileManager = FileManager.default
-        for cand in candidates where fileManager.isExecutableFile(atPath: cand) {
-            return Path(cand)
-        }
-        throw SwiftLintBuildToolPluginError.swiftlintNotFound
     }
 }
