@@ -1,5 +1,4 @@
-# This workflow will build a Swift project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
+# .github/workflows/ios-spm-build-test.yml
 name: iOS SPM Build and Test
 
 on:
@@ -11,59 +10,119 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    env:
+      SCHEME: NetworkLayer
+      DESTINATION: "platform=iOS Simulator,name=iPhone 14,OS=latest"
+      DERIVED_DATA: ${{ github.workspace }}/DerivedData
 
     steps:
       - uses: actions/checkout@v4
 
       # -----------------------------------------------------------------------
-      # Cache de Mint (contendrá el binario de SwiftLint 0.57.0)
+      # Cache de Mint (SwiftLint)
       # -----------------------------------------------------------------------
       - name: Cache Mint packages (SwiftLint)
         uses: actions/cache@v4
         with:
           path: ~/.mint
-          # Asegúrate de añadir un Mintfile al repositorio para que el hash
-          # se regenere cuando cambies versiones.
           key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
           restore-keys: |
             ${{ runner.os }}-mint-
+
       # -----------------------------------------------------------------------
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
 
       # -----------------------------------------------------------------------
-      # Instalar SwiftLint 0.57.0 de forma determinística
+      # Instalar SwiftLint con una versión fija (vía Mint)
       # -----------------------------------------------------------------------
-      - name: Install SwiftLint 0.57.0 (via Mint)
+      - name: Install SwiftLint via Mint
+        shell: bash
         run: |
+          if ! command -v brew &>/dev/null; then
+            echo "Homebrew not found. Installing..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
           if ! command -v mint &>/dev/null; then
             brew update
             brew install mint
           fi
-          mint install realm/SwiftLint@0.57.0
-          mint run swiftlint version
-      # -----------------------------------------------------------------------
-      # -----------------------------------------------------------------------
-      # Lint estricto: falla el workflow si hay violaciones
-      # -----------------------------------------------------------------------
-      - name: Lint with SwiftLint (strict)
-        run: mint run swiftlint lint --strict
-      # -----------------------------------------------------------------------
+          # Usa la versión de tu Mintfile, p.ej. realm/SwiftLint@0.57.0
+          mint install
 
-      # Build the Swift package for iOS simulator
+          echo "SwiftLint version:"
+          mint run swiftlint version
+
+      # -----------------------------------------------------------------------
+      # Lint estricto (fallará el job si hay violaciones)
+      # -----------------------------------------------------------------------
+      - name: SwiftLint (lint --strict)
+        shell: bash
+        run: |
+          mint run swiftlint lint --strict
+
+      # -----------------------------------------------------------------------
+      # Build para generar los .xcactivitylog necesarios para "analyze"
+      # (usar DerivedData controlado para localizar los logs)
+      # -----------------------------------------------------------------------
+      - name: Build (generate compiler logs for analyze)
+        shell: bash
+        run: |
+          # Limpia DerivedData sólo de Logs (opcional) para evitar confusiones
+          rm -rf "$DERIVED_DATA/Logs"
+          xcodebuild \
+            -destination "$DESTINATION" \
+            -scheme "$SCHEME" \
+            -sdk iphonesimulator \
+            -derivedDataPath "$DERIVED_DATA" \
+            -configuration Debug \
+            build | xcpretty || true
+          # Nota: no fallamos aquí; dejamos que "analyze" sea quien decida
+
+      # -----------------------------------------------------------------------
+      # SwiftLint analyze (usa el log más reciente del build anterior)
+      # -----------------------------------------------------------------------
+      - name: SwiftLint (analyze --strict)
+        shell: bash
+        run: |
+          LOG_DIR="$DERIVED_DATA/Logs/Build"
+          if [[ ! -d "$LOG_DIR" ]]; then
+            echo "::error::Build log directory not found at $LOG_DIR"
+            exit 1
+          fi
+
+          LOG_PATH="$(ls -t "$LOG_DIR"/*.xcactivitylog 2>/dev/null | head -n1)"
+          if [[ -z "$LOG_PATH" ]]; then
+            echo "::error::No .xcactivitylog files found. Ensure the previous build step ran and produced logs."
+            exit 1
+          fi
+
+          echo "Using compiler log: $LOG_PATH"
+          # --strict hará que el job falle si hay issues de analyzer_rules
+          mint run swiftlint analyze --strict --compiler-log-path "$LOG_PATH"
+
+      # -----------------------------------------------------------------------
+      # Build del package para iOS Simulator (formal, con fallo si algo rompe)
+      # -----------------------------------------------------------------------
       - name: Build for iOS Simulator
+        shell: bash
         run: |
           xcodebuild \
-            -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-            -scheme NetworkLayer \
+            -destination "$DESTINATION" \
+            -scheme "$SCHEME" \
             -sdk iphonesimulator \
+            -derivedDataPath "$DERIVED_DATA" \
             build
 
-      # Run tests on iOS simulator
+      # -----------------------------------------------------------------------
+      # Tests en simulador iOS
+      # -----------------------------------------------------------------------
       - name: Run tests on iOS Simulator
+        shell: bash
         run: |
           xcodebuild \
-            -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
-            -scheme NetworkLayer \
+            -destination "$DESTINATION" \
+            -scheme "$SCHEME" \
             -sdk iphonesimulator \
+            -derivedDataPath "$DERIVED_DATA" \
             test
