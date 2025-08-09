@@ -1,4 +1,3 @@
-# .github/workflows/ios-spm-build-test.yml
 name: iOS SPM Build and Test
 
 on:
@@ -18,57 +17,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # Cache de Mint (SwiftLint)
-      # -----------------------------------------------------------------------
-      - name: Cache Mint packages (SwiftLint)
+      # Cache Mint (depende del hash del Mintfile)
+      - name: Cache Mint packages
         uses: actions/cache@v4
         with:
           path: ~/.mint
-          key: ${{ runner.os }}-mint-${{ hashFiles('**/Mintfile') }}
+          key: ${{ runner.os }}-mint-${{ hashFiles('Mintfile') }}
           restore-keys: |
             ${{ runner.os }}-mint-
 
-      # -----------------------------------------------------------------------
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
 
-      # -----------------------------------------------------------------------
-      # Instalar SwiftLint con una versión fija (vía Mint)
-      # -----------------------------------------------------------------------
-      - name: Install SwiftLint via Mint
-        shell: bash
+      # Instalar herramientas del Mintfile (SwiftLint incluido)
+      - name: Mint install
         run: |
           if ! command -v brew &>/dev/null; then
-            echo "Homebrew not found. Installing..."
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           fi
           if ! command -v mint &>/dev/null; then
             brew update
             brew install mint
           fi
-          # Usa la versión de tu Mintfile, p.ej. realm/SwiftLint@0.57.0
           mint install
-
           echo "SwiftLint version:"
           mint run swiftlint version
 
-      # -----------------------------------------------------------------------
-      # Lint estricto (fallará el job si hay violaciones)
-      # -----------------------------------------------------------------------
+      # Lint rápido/estricto
       - name: SwiftLint (lint --strict)
-        shell: bash
-        run: |
-          mint run swiftlint lint --strict
+        run: mint run swiftlint lint --strict
 
-      # -----------------------------------------------------------------------
-      # Build para generar los .xcactivitylog necesarios para "analyze"
-      # (usar DerivedData controlado para localizar los logs)
-      # -----------------------------------------------------------------------
-      - name: Build (generate compiler logs for analyze)
-        shell: bash
+      # Build para generar logs, necesarios si usas 'analyze'
+      - name: Build (generate logs for analyze)
         run: |
-          # Limpia DerivedData sólo de Logs (opcional) para evitar confusiones
           rm -rf "$DERIVED_DATA/Logs"
           xcodebuild \
             -destination "$DESTINATION" \
@@ -77,35 +58,20 @@ jobs:
             -derivedDataPath "$DERIVED_DATA" \
             -configuration Debug \
             build | xcpretty || true
-          # Nota: no fallamos aquí; dejamos que "analyze" sea quien decida
 
-      # -----------------------------------------------------------------------
-      # SwiftLint analyze (usa el log más reciente del build anterior)
-      # -----------------------------------------------------------------------
+      # Lint avanzado con analyzer (opcional; quítalo si no lo usas)
       - name: SwiftLint (analyze --strict)
-        shell: bash
         run: |
           LOG_DIR="$DERIVED_DATA/Logs/Build"
-          if [[ ! -d "$LOG_DIR" ]]; then
-            echo "::error::Build log directory not found at $LOG_DIR"
-            exit 1
-          fi
-
           LOG_PATH="$(ls -t "$LOG_DIR"/*.xcactivitylog 2>/dev/null | head -n1)"
           if [[ -z "$LOG_PATH" ]]; then
-            echo "::error::No .xcactivitylog files found. Ensure the previous build step ran and produced logs."
+            echo "::error::No .xcactivitylog found at $LOG_DIR"
             exit 1
           fi
-
-          echo "Using compiler log: $LOG_PATH"
-          # --strict hará que el job falle si hay issues de analyzer_rules
           mint run swiftlint analyze --strict --compiler-log-path "$LOG_PATH"
 
-      # -----------------------------------------------------------------------
-      # Build del package para iOS Simulator (formal, con fallo si algo rompe)
-      # -----------------------------------------------------------------------
+      # Build & Test (puedes omitir el build si ya hiciste el anterior)
       - name: Build for iOS Simulator
-        shell: bash
         run: |
           xcodebuild \
             -destination "$DESTINATION" \
@@ -114,11 +80,7 @@ jobs:
             -derivedDataPath "$DERIVED_DATA" \
             build
 
-      # -----------------------------------------------------------------------
-      # Tests en simulador iOS
-      # -----------------------------------------------------------------------
       - name: Run tests on iOS Simulator
-        shell: bash
         run: |
           xcodebuild \
             -destination "$DESTINATION" \
