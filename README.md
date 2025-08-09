@@ -1,4 +1,3 @@
-
 # NetworkLayer
 
 **NetworkLayer** is a Swift package designed to provide a modular and reusable networking layer. It supports **iOS** and is built with **Swift Package Manager (SPM)**. The package also includes core utilities in a separate module, **NLCore**.
@@ -6,15 +5,14 @@
 ## Features
 
 - Networking layer abstraction for REST API calls.
-- Supports iOS (min iOS 15).
+- Supports iOS (min iOS 16).
 - Simple and flexible architecture.
 - Easily extensible for different network-related functionalities.
 
 ## Requirements
 
-- iOS 15.0+
-- Xcode 12.5+
-- Swift 5.5+
+- iOS 16.0+
+- Xcode 16.0+
 
 ## Installation
 
