@@ -14,7 +14,8 @@ let package = Package(
     targets: [
         .plugin(
             name: "SwiftLintBuildToolPlugin",
-            capability: .buildTool()
+            capability: .buildTool(),
+            path: "Plugins/SwiftLintBuildToolPlugin"
         ),
         .target(name: "NLCore", plugins: [
             .plugin(
