@@ -2,7 +2,7 @@ import Foundation
 import PackagePlugin
 
 @main
-struct SwiftLintBuildToolPlugin: BuildToolPlugin {
+struct NetworkLayerSwiftLintBuildToolPlugin: BuildToolPlugin {
     func createBuildCommands(
         context: PluginContext,
         target: Target

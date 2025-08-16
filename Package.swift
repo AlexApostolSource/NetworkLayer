@@ -13,19 +13,19 @@ let package = Package(
     ],
     targets: [
         .plugin(
-            name: "SwiftLintBuildToolPlugin",
+            name: "NetworkLayerSwiftLintBuildToolPlugin",
             capability: .buildTool(),
-            path: "Plugins/SwiftLintBuildToolPlugin"
+            path: "Plugins/NetworkLayerSwiftLintBuildToolPlugin"
         ),
         .target(name: "NLCore", plugins: [
             .plugin(
-                name: "SwiftLintBuildToolPlugin"
+                name: "NetworkLayerSwiftLintBuildToolPlugin"
             )
         ]),
         .target(
             name: "NetworkLayer", dependencies: ["NLCore"], plugins: [
                 .plugin(
-                    name: "SwiftLintBuildToolPlugin"
+                    name: "NetworkLayerSwiftLintBuildToolPlugin"
                 )
             ]
         ),
@@ -33,7 +33,7 @@ let package = Package(
             name: "NetworkLayerTests",
             dependencies: ["NetworkLayer"], plugins: [
                 .plugin(
-                    name: "SwiftLintBuildToolPlugin"
+                    name: "NetworkLayerSwiftLintBuildToolPlugin"
                 )
             ]
         ),
@@ -42,7 +42,7 @@ let package = Package(
             name: "NLCoreTests",
             dependencies: ["NLCore"], plugins: [
                 .plugin(
-                    name: "SwiftLintBuildToolPlugin"
+                    name: "NetworkLayerSwiftLintBuildToolPlugin"
                 )
             ]
         )
